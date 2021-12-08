@@ -23,7 +23,7 @@ class Comparexml:
         获取白名单 ISIN==MS_SECID
         '''
         id = []
-        with open('white_test.txt', 'r', encoding='utf-8')as f:
+        with open('white_debug.txt', 'r', encoding='utf-8')as f:
             for x in f.readlines():
                 id.append(x.replace('\n', ''))
         return id
@@ -65,6 +65,17 @@ class Comparexml:
     #         print(managerName[0].text,managerName[1].text)
     #         print(managerStartDate[0].text)
     #         print(managerEndtDate[0].text)
+
+    def date_conversion(self,csv_managerStartDate):# 日期转换：xml中日期格式xxxx-xx-xx,  csv中日期格式xxxx/xx/xx
+        csv_year = csv_managerStartDate[0]  # 年
+        csv_month = csv_managerStartDate[1]  # 月
+        csv_day = csv_managerStartDate[2]  # 日
+        if len(csv_month) == 1:  # 如果月的长度为1
+            csv_month = f'0{csv_month}'
+        if len(csv_day) == 1:  # 如果日的长度为1
+            csv_day = f'0{csv_day}'
+        start_date = f"{csv_year}-{csv_month}-{csv_day}"  # 生成新的日期格式xxxx-xx-xx
+        return start_date
 
 
     def xml_manager(self):
@@ -114,7 +125,9 @@ class Comparexml:
                                 managerStartDate = re.findall("<StartDate>(.*?)</StartDate>",m)
                                 if managerStartDate:
                                     print(f"managerStartDate:",managerStartDate[0])
-                                    xml_list_detail.append(managerStartDate[0].replace('-','/').replace('/0','/'))
+                                    # xml_list_detail.append(managerStartDate[0].replace('-','/').replace('/0','/'))
+                                    xml_list_detail.append(managerStartDate[0])
+
                                 else:
                                     print("缺少managerStartDate")
                                     # assert False
@@ -130,9 +143,10 @@ class Comparexml:
             print(xml_list)
         return xml_list
 
+
     def read_manager_csv(self,managercsv_filepath):
         manager_csv_dic = {}
-        with open(managercsv_filepath, 'r') as f:
+        with open(managercsv_filepath, 'r', encoding='utf-8') as f:
             reader = csv.reader(f)
             i = 0
             for row in reader:
@@ -140,6 +154,14 @@ class Comparexml:
                     pass
                 else:
                     row = row[0:4]
+                    start_date = row[3]  # 读取csv中的日期
+                    if "/" in start_date:
+                        csv_managerStartDate = start_date.split("/")  # csv中，年月日，根据"/"切割
+                        start_date = self.date_conversion(csv_managerStartDate)  # 把切割后的列表传进日期转换的方法date_conversion()
+                    if "-" in start_date: # 同理，月份1~9加0，日期1~9加0
+                        csv_managerStartDate = start_date.split("-")
+                        start_date = self.date_conversion(csv_managerStartDate)
+                    row[3] = start_date
                     row.sort()
                     manager_csv_dic[f"第{i}行"] = row
                 i += 1
@@ -194,6 +216,69 @@ class Comparexml:
             self.write_compare_data('result_manager.txt', '数据量不一致', times)
 
 
+    def xml_holding(self):
+        # MS_SECID_list = self.get_MS_SECID()
+        xml_list = []
+        id_list = self.get_white()
+        for m in id_list:
+            # isin==ms_secid
+            # print(f'{m}')
+            m = m.split('==')
+            ISIN = m[0]
+            MS_SECID = m[1]
+
+            url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
+            res = requests.get(url)
+
+            if res.status_code == 200:
+                print(f">>>>>>>>>>开始获取{MS_SECID}的数据>>>>>>>>>>")
+                xml_holding = res.text
+                xml_holding_date = res.text
+                xml_holding = re.findall('<Holding>(.*?)</Holding>', xml_holding,re.S)  # 修饰符re.S  使.匹配包括换行在内的所有字符
+                xml_holding_date = re.findall("<PortfolioSummary>(.*?)</PortfolioSummary>", xml_holding_date,re.S)
+
+                if xml_holding:
+                    # holdingISINCode,securityName,weight
+                    holding_list = xml_holding[0]
+                    holding_detail = holding_list.split("</HoldingDetail>")
+                    # reportDate
+                    holding_list_date = xml_holding_date[0]
+                    holding_detail_date = holding_list_date.split("</PortfolioSummary>")
+                    # print(len(holding_detail))
+                    for m in holding_detail:
+                        xml_list_detail = []
+                        # 持仓对应ISIN
+                        holdingISINCode = re.findall('<ISIN>(.*?)</ISIN>', m)
+                        if holdingISINCode:
+                            print(f"holdingISINCode:", holdingISINCode[0])
+                            xml_list_detail.append(holdingISINCode[0])
+                        # 名称
+                        SecurityName = re.findall("<SecurityName>(.*?)</SecurityName>",m)
+                        if SecurityName:
+                            print(f"SecurityName",SecurityName[0])
+                            xml_list_detail.append(SecurityName[0])
+                        # 持仓占比
+                        Weighting = re.findall("<Weighting>(.*?)</Weighting>",m)
+                        if Weighting:
+                            print(f"Weighting",Weighting[0])
+                            xml_list_detail.append(Weighting[0])
+
+                        for d in holding_detail_date:
+                            # 报告日期
+                            reportDate = re.findall("<Date>(.*?)</Date>",d)
+                            print(f"reportDate",reportDate[0])
+                            xml_list_detail.append(reportDate[0])
+                        print("=============================")
+
+                        if xml_list_detail:
+                            xml_list_detail.append(ISIN)
+                            xml_list_detail.sort()
+                            xml_list.append(xml_list_detail)
+            print(xml_list)
+        return xml_list
+
+
+
 
 if __name__ == '__main__':
     c = Comparexml()
@@ -201,5 +286,6 @@ if __name__ == '__main__':
     # c.get_white()
     # c.get_MS_SECID()
     # c.xml_manager()
-    c.compare_manager()
+    # c.compare_manager()
+    c.xml_holding()
 
