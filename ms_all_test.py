@@ -15,7 +15,7 @@ class Comparexml:
     def __init__(self):
         # self.url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36'}
-        self.managercsv_filepath = r'D:\ms\manager_1638860780398.csv'
+        self.holdingcsv_filepath = r'D:\ms\holding_1639096804132.csv'
 
     def get_white(self):
         '''
@@ -215,6 +215,235 @@ class Comparexml:
             self.write_compare_data('result_manager.txt', '数据量不一致', times)
 
 
+    def xml_holding(self):
+        # MS_SECID_list = self.get_MS_SECID()
+        new_xml_list = []
+        id_list = self.get_white()
+        for m in id_list:
+            xml_list = []
+            # isin==ms_secid
+            # print(f'{m}')
+            m = m.split('==')
+            ISIN = m[0]
+            MS_SECID = m[1]
+
+            url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
+            res = requests.get(url)
+
+            if res.status_code == 200:
+                print(f">>>>>>>>>>开始获取{MS_SECID}的数据>>>>>>>>>>")
+                xml_holding_text = res.text
+                xml_holding = re.findall('<Holding>(.*?)</Holding>', xml_holding_text, re.S)  # 修饰符re.S  使.匹配包括换行在内的所有字符
+                # reportDate在其他位置
+                xml_holding_date = re.findall("<PortfolioSummary>(.*?)</PortfolioSummary>", xml_holding_text, re.S)
+                if xml_holding_date:
+                    holding_list_date = xml_holding_date[0]
+                    holding_detail_date = re.findall("<Date>(.*?)</Date>", holding_list_date)
+                    if holding_detail_date:
+                        print(f"reportDate : {holding_detail_date[0]}")
+                if xml_holding:
+                    # 获取holdingISINCode,securityName,weight
+                    holding_list = xml_holding[0]
+                    holding_detail = holding_list.split("</HoldingDetail>")
+
+                    weight_list_detail = [] # [6.99291]
+                    weight_list = [] # [{0: 6.99291}]
+                    # 遍历序列中的元素及其下标
+                    for num, hd in enumerate(holding_detail):
+                        xml_list_detail = [] # ['HK0000012440', 'IE0008370151', 'First Sentier Asia Strat Bd I USDInc', '6.99291', '2021-06-30']
+                        xml_dic_detail = {} # {0: ['HK0000012440', 'IE0008370151', 'First Sentier Asia Strat Bd I USDInc', '6.99291', '2021-06-30']}
+                        weight_dic = {}
+                        Weighting = re.findall("<Weighting>(.*?)</Weighting>", hd)
+                        if Weighting:
+                            print(f"Weighting", Weighting[0])
+                            weight_text = Weighting[0]
+                            weight_float = float(Weighting[0])
+                            # 持仓占比
+                            xml_list_detail.append(ISIN)
+                            isin_code = re.findall("<ISIN>(.*?)</ISIN>", hd)
+                            if isin_code:
+                                print(isin_code[0])
+                                xml_list_detail.append(isin_code[0])
+                            currency = re.findall('<Currency _Id="(.*?)">',hd)
+                            if currency:
+                                print(currency[0])
+                                xml_list_detail.append(currency[0])
+                            security_name = re.findall("<SecurityName>(.*?)</SecurityName>", hd)
+                            if security_name:
+                                print(security_name[0])
+                                xml_list_detail.append(security_name[0])
+
+                            xml_list_detail.append(weight_text)
+                            xml_list_detail.append(holding_detail_date[0])
+                            xml_list_detail.sort()
+
+                            xml_dic_detail[num] = xml_list_detail # {0: ['HK0000012440', 'IE0008370151', 'First Sentier Asia Strat Bd I USDInc', '6.99291', '2021-06-30']}
+                            weight_dic[num] = weight_float # {0: 6.99291}
+
+                            weight_list.append(weight_dic)
+                            weight_list_detail.append(weight_float)
+                            print("================================")
+                            xml_list.append(xml_dic_detail)
+
+                    weight_list_detail = sorted(weight_list_detail, key=float, reverse=True)
+                    # print(weight_list_detail)
+                    weight_num_list = self.get_weight_num(weight_list_detail, weight_list)
+                    print(f"排序后的weight坐标: {weight_num_list}")
+                    # 根据新坐标获取列表
+                    for wl in weight_num_list[:10]:
+                        for xxx in xml_list:
+                            for k, v in xxx.items():
+                                if wl == k:
+                                    new_xml_list.append(v)
+                print(new_xml_list)
+        return new_xml_list
+
+    def get_weight_num(self,weight_list_detail, weight_list):
+        """
+        获取weight从大到小的坐标
+        :return:
+        """
+        new_weight_num = []
+        for wd in weight_list_detail:
+            for xx in weight_list:
+                for k, v in xx.items():
+                    if wd == v:
+                        new_weight_num.append(k)
+        return new_weight_num
+
+
+
+
+    def read_holding_csv(self):
+        holding_csv_dic = {}
+        with open(self.holdingcsv_filepath, 'r', encoding='utf-8') as f:
+            reader = csv.reader(f)
+            i = 0
+            for row in reader:
+                if i == 0:
+                    pass
+                else:
+                    row = row[0:6]
+                    report_date = row[5]  # 读取csv中的日期
+                    if "/" in report_date:
+                        csv_reportDate = report_date.split("/")  # csv中，年月日，根据"/"切割
+                        report_date = self.date_conversion(csv_reportDate)  # 把切割后的列表传进日期转换的方法date_conversion()
+                    if "-" in report_date: # 同理，月份1~9加0，日期1~9加0
+                        csv_reportDate = report_date.split("-")
+                        report_date = self.date_conversion(csv_reportDate)
+                    row[5] = report_date
+                    row.sort()
+                    while "" in row:
+                        row.remove("")
+                    holding_csv_dic[f"第{i}行"] = row
+                i += 1
+            print(holding_csv_dic)
+            return holding_csv_dic
+
+
+    def compare_holding(self):
+        '''
+        比较 holding.csv文件
+        '''
+        times = self.get_time()
+        print('\n>>>>>>>>>>正在比较holding.csv文件>>>>>>>>>>')
+        holding_list = self.xml_holding()
+        # print(holding_list)
+        print(f"ms数据量：",len(holding_list))
+        csv_data = self.read_holding_csv()
+        # print(csv_data)
+        print(f"holding.csv数据量：",len(csv_data))
+
+        if len(holding_list) == len(csv_data):
+            j = 0
+            for k, v in csv_data.items():
+                i = 0
+                for cm in holding_list:
+                    if operator.eq(cm, v):
+                        i += 1
+                        j += 1
+                    else:
+                        pass
+                # i += 1 # 打印相同数据
+                if i != 1:# 数据相同，i计数+1,即相同的数据不写入txt
+                    self.write_compare_data('result_holding.txt', k, times)
+                    print(f'数据不一致：',k)
+            if j == len(holding_list):# 数据比对相同时，j的计数+1，相同数=总数，数据一致。
+                print('\nholding.csv >>>校验通过，数据一致!')
+        else:
+            print('数据量不一致')
+            self.write_compare_data('result_manager.txt', '数据量不一致', times)
+
+
+    def xml_basicInfo(self):
+        # MS_SECID_list = self.get_MS_SECID()
+        xml_list = []
+        id_list = self.get_white()
+        for m in id_list:
+            # isin==ms_secid
+            # print(f'{m}')
+            m = m.split('==')
+            ISIN = m[0]
+            MS_SECID = m[1]
+
+            url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
+            res = requests.get(url)
+
+            if res.status_code == 200:
+                print(f">>>>>>>>>>开始获取{MS_SECID}的数据>>>>>>>>>>")
+                xml_basicInfo = res.text
+                # SecurityName,weighting 对应位置
+                xml_basicInfo_basicInfoDetail = re.findall('<basicInfo>(.*?)</basicInfo>', xml_basicInfo,re.S)  # 修饰符re.S  使.匹配包括换行在内的所有字符
+                #reportdate 对应位置
+                xml_basicInfo_date = re.findall("<PortfolioSummary>(.*?)</PortfolioSummary>", xml_basicInfo,re.S)
+
+                if xml_basicInfo:
+                    # basicInfoISINCode,securityName,weight
+                    basicInfo_list = xml_basicInfo_basicInfoDetail[0]
+                    basicInfo_detail = basicInfo_list.split("</basicInfoDetail>")
+                    # reportDate
+                    basicInfo_list_date = xml_basicInfo_date[0]
+                    basicInfo_detail_date = basicInfo_list_date.split("</PortfolioSummary>")
+                    # print(len(basicInfo_detail))
+                    for m in basicInfo_detail:
+                        xml_list_detail = []
+                        # 持仓占比
+                        Weighting = re.findall("<Weighting>(.*?)</Weighting>",m)
+                        # weight_list = []
+                        if Weighting:
+                            print(f"Weighting",Weighting[0])
+                            xml_list_detail.append(Weighting[0])
+                            # xml_list_detail.sort(key=lambda x:int(x[0]), reverse=True)
+                            # weight_top10 = xml_list_detail[0:10]
+                            # xml_list_detail.append(weight_top10)
+
+                            # 持仓对应ISIN
+                            basicInfoISINCode = re.findall('<ISIN>(.*?)</ISIN>', m)
+                            if basicInfoISINCode:
+                                print(f"basicInfoISINCode:", basicInfoISINCode[0])
+                                xml_list_detail.append(basicInfoISINCode[0])
+                            # 名称
+                            SecurityName = re.findall("<SecurityName>(.*?)</SecurityName>",m)
+                            if SecurityName:
+                                print(f"SecurityName",SecurityName[0])
+                                xml_list_detail.append(SecurityName[0])
+                            for d in basicInfo_detail_date:
+                                # 报告日期
+                                reportDate = re.findall("<Date>(.*?)</Date>",d)
+                                print(f"reportDate",reportDate[0])
+                                xml_list_detail.append(reportDate[0])
+                            print("=============================")
+
+                        if xml_list_detail:
+                            xml_list_detail.append(ISIN)
+                            # xml_list_detail.sort()
+                            xml_list.append(xml_list_detail)
+
+            print(xml_list)
+        return xml_list
+
+
+
 
 
 
@@ -225,5 +454,19 @@ if __name__ == '__main__':
     # c.get_white()
     # c.get_MS_SECID()
     # c.xml_manager()
-    c.compare_manager()
 
+    # # 校验manager.csv
+    # c.compare_manager()
+
+    # #获取xml数据
+    # c.xml_holding()
+    # # aa = c.xml_holding()
+    # # print("打印根据weight排名前十个：")
+    # # for a in aa:
+    # #     print(a)
+
+    # # 读取holding.csv内容
+    # c.read_holding_csv()
+
+    # 校验holding.csv
+    c.compare_holding()

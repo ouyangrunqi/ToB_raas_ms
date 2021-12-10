@@ -277,6 +277,7 @@ class Comparexml:
 
                             xml_list_detail.append(weight_text)
                             xml_list_detail.append(holding_detail_date[0])
+                            xml_list_detail.sort()
 
                             xml_dic_detail[num] = xml_list_detail # {0: ['HK0000012440', 'IE0008370151', 'First Sentier Asia Strat Bd I USDInc', '6.99291', '2021-06-30']}
                             weight_dic[num] = weight_float # {0: 6.99291}
@@ -333,7 +334,9 @@ class Comparexml:
                         csv_reportDate = report_date.split("-")
                         report_date = self.date_conversion(csv_reportDate)
                     row[5] = report_date
-                    # row.sort()
+                    row.sort()
+                    while "" in row:
+                        row.remove("")
                     holding_csv_dic[f"第{i}行"] = row
                 i += 1
             print(holding_csv_dic)
