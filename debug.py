@@ -15,7 +15,7 @@ class Comparexml:
     def __init__(self):
         # self.url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36'}
-        self.managercsv_filepath = r'D:\ms\manager_test.csv'
+        self.managercsv_filepath = r'D:\ms\manager_debug.csv'
         self.holdingcsv_filepath = r'D:\ms\holding_debug.csv'
 
 
@@ -266,10 +266,15 @@ class Comparexml:
                             if isin_code:
                                 print(isin_code[0])
                                 xml_list_detail.append(isin_code[0])
+                            currency = re.findall('<Currency _Id="(.*?)">',hd)
+                            if currency:
+                                print(currency[0])
+                                xml_list_detail.append(currency[0])
                             security_name = re.findall("<SecurityName>(.*?)</SecurityName>", hd)
                             if security_name:
                                 print(security_name[0])
                                 xml_list_detail.append(security_name[0])
+
                             xml_list_detail.append(weight_text)
                             xml_list_detail.append(holding_detail_date[0])
 
@@ -282,18 +287,17 @@ class Comparexml:
                             xml_list.append(xml_dic_detail)
 
                     weight_list_detail = sorted(weight_list_detail, key=float, reverse=True)
-                    # weight_list_detail.reverse()
-                    print(weight_list_detail)
+                    # print(weight_list_detail)
                     weight_num_list = self.get_weight_num(weight_list_detail, weight_list)
                     print(f"排序后的weight坐标: {weight_num_list}")
                     # 根据新坐标获取列表
-                    for ww in weight_num_list[:10]:
+                    for wl in weight_num_list[:10]:
                         for xxx in xml_list:
                             for k, v in xxx.items():
-                                if ww == k:
+                                if wl == k:
                                     new_xml_list.append(v)
-
-            return new_xml_list
+                print(new_xml_list)
+        return new_xml_list
 
     def get_weight_num(self,weight_list_detail, weight_list):
         """
@@ -311,28 +315,63 @@ class Comparexml:
 
 
 
-    def read_holding_csv(self, holdingcsv_filepath):
+    def read_holding_csv(self):
         holding_csv_dic = {}
-        with open(holdingcsv_filepath, 'r', encoding='utf-8') as f:
+        with open(self.holdingcsv_filepath, 'r', encoding='utf-8') as f:
             reader = csv.reader(f)
             i = 0
             for row in reader:
                 if i == 0:
                     pass
                 else:
-                    row = row[0:5]
-                    report_date = row[4]  # 读取csv中的日期
+                    row = row[0:6]
+                    report_date = row[5]  # 读取csv中的日期
                     if "/" in report_date:
                         csv_reportDate = report_date.split("/")  # csv中，年月日，根据"/"切割
                         report_date = self.date_conversion(csv_reportDate)  # 把切割后的列表传进日期转换的方法date_conversion()
                     if "-" in report_date: # 同理，月份1~9加0，日期1~9加0
                         csv_reportDate = report_date.split("-")
                         report_date = self.date_conversion(csv_reportDate)
-                    row[4] = report_date
-                    row.sort()
+                    row[5] = report_date
+                    # row.sort()
                     holding_csv_dic[f"第{i}行"] = row
                 i += 1
+            print(holding_csv_dic)
             return holding_csv_dic
+
+
+    def compare_holding(self):
+        '''
+        比较 holding.csv文件
+        '''
+        times = self.get_time()
+        print('\n>>>>>>>>>>正在比较holding.csv文件>>>>>>>>>>')
+        holding_list = self.xml_holding()
+        # print(holding_list)
+        print(f"ms数据量：",len(holding_list))
+        csv_data = self.read_holding_csv()
+        # print(csv_data)
+        print(f"holding.csv数据量：",len(csv_data))
+
+        if len(holding_list) == len(csv_data):
+            j = 0
+            for k, v in csv_data.items():
+                i = 0
+                for cm in holding_list:
+                    if operator.eq(cm, v):
+                        i += 1
+                        j += 1
+                    else:
+                        pass
+                # i += 1 # 打印相同数据
+                if i != 1:# 数据相同，i计数+1,即相同的数据不写入txt
+                    self.write_compare_data('result_holding.txt', k, times)
+                    print(f'数据不一致：',k)
+            if j == len(holding_list):# 数据比对相同时，j的计数+1，相同数=总数，数据一致。
+                print('\nholding.csv >>>校验通过，数据一致!')
+        else:
+            print('数据量不一致')
+            self.write_compare_data('result_manager.txt', '数据量不一致', times)
 
 
     def xml_basicInfo(self):
@@ -415,15 +454,18 @@ if __name__ == '__main__':
     # c.get_MS_SECID()
     # c.xml_manager()
 
-    # 比对manager.csv
+    # # 校验manager.csv
     # c.compare_manager()
+
+    # #获取xml数据
     # c.xml_holding()
+    # # aa = c.xml_holding()
+    # # print("打印根据weight排名前十个：")
+    # # for a in aa:
+    # #     print(a)
+
+    # # 读取holding.csv内容
     # c.read_holding_csv()
 
-
-    aa = c.xml_holding()
-    print(aa)
-    print("打印根据weight排名前十个：")
-    for a in aa:
-        print(a)
-
+    # 校验holding.csv
+    c.compare_holding()
