@@ -17,6 +17,7 @@ class Comparexml:
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36'}
         self.managercsv_filepath = r'D:\ms\manager_debug.csv'
         self.holdingcsv_filepath = r'D:\ms\holding_debug.csv'
+        self.basciInfo_filepath = r'D:\ms\basicInfo_debug.csv'
 
 
     def get_white(self):
@@ -394,54 +395,46 @@ class Comparexml:
             if res.status_code == 200:
                 print(f">>>>>>>>>>开始获取{MS_SECID}的数据>>>>>>>>>>")
                 xml_basicInfo = res.text
-                # SecurityName,weighting 对应位置
-                xml_basicInfo_basicInfoDetail = re.findall('<basicInfo>(.*?)</basicInfo>', xml_basicInfo,re.S)  # 修饰符re.S  使.匹配包括换行在内的所有字符
-                #reportdate 对应位置
-                xml_basicInfo_date = re.findall("<PortfolioSummary>(.*?)</PortfolioSummary>", xml_basicInfo,re.S)
+                xml_basicInfo_FundShareClass = re.findall('<FundShareClass .*?>(.*?)</FundShareClass>', xml_basicInfo,re.S)  # 修饰符re.S  使.匹配包括换行在内的所有字符
+                # fundNameEN
+                xml_basicInfo_Operation = re.findall('<Operation>(.*?)</Operation>', xml_basicInfo,re.S)
+                # fundNameSC
+                xml_basicInfo_MultilingualVariation = re.findall('<MultilingualVariation>(.*?)</MultilingualVariation>', xml_basicInfo, re.S)
+
 
                 if xml_basicInfo:
-                    # basicInfoISINCode,securityName,weight
-                    basicInfo_list = xml_basicInfo_basicInfoDetail[0]
-                    basicInfo_detail = basicInfo_list.split("</basicInfoDetail>")
-                    # reportDate
-                    basicInfo_list_date = xml_basicInfo_date[0]
-                    basicInfo_detail_date = basicInfo_list_date.split("</PortfolioSummary>")
-                    # print(len(basicInfo_detail))
-                    for m in basicInfo_detail:
+                    basicInfo_list = xml_basicInfo_FundShareClass[0]
+                    basicInfo_list_Operation = xml_basicInfo_Operation[0]
+                    basicInfo_FundShareClass = basicInfo_list.split("</FundShareClass>")
+                    basicInfo_ShareClassBasics =basicInfo_list_Operation.split("</LegalName>")
+
+
+                    for m in basicInfo_FundShareClass:
                         xml_list_detail = []
-                        # 持仓占比
-                        Weighting = re.findall("<Weighting>(.*?)</Weighting>",m)
-                        # weight_list = []
-                        if Weighting:
-                            print(f"Weighting",Weighting[0])
-                            xml_list_detail.append(Weighting[0])
-                            # xml_list_detail.sort(key=lambda x:int(x[0]), reverse=True)
-                            # weight_top10 = xml_list_detail[0:10]
-                            # xml_list_detail.append(weight_top10)
+                        # 父基金编码
+                        parentCode = re.findall('<Fund _Id="(.*?)"',m)
+                        if parentCode:
+                            print(f"parentCode:",parentCode[0])
+                            xml_list_detail.append(parentCode[0])
+                        for name in basicInfo_ShareClassBasics:
+                            fundNameEN = re.findall("<LegalName>(.*)",name)
+                            if fundNameEN:
+                                print(f"fundNameEN:", fundNameEN[0])
+                                xml_list_detail.append(fundNameEN[0])
 
-                            # 持仓对应ISIN
-                            basicInfoISINCode = re.findall('<ISIN>(.*?)</ISIN>', m)
-                            if basicInfoISINCode:
-                                print(f"basicInfoISINCode:", basicInfoISINCode[0])
-                                xml_list_detail.append(basicInfoISINCode[0])
-                            # 名称
-                            SecurityName = re.findall("<SecurityName>(.*?)</SecurityName>",m)
-                            if SecurityName:
-                                print(f"SecurityName",SecurityName[0])
-                                xml_list_detail.append(SecurityName[0])
-                            for d in basicInfo_detail_date:
-                                # 报告日期
-                                reportDate = re.findall("<Date>(.*?)</Date>",d)
-                                print(f"reportDate",reportDate[0])
-                                xml_list_detail.append(reportDate[0])
-                            print("=============================")
-
-                        if xml_list_detail:
-                            xml_list_detail.append(ISIN)
-                            # xml_list_detail.sort()
-                            xml_list.append(xml_list_detail)
-
-            print(xml_list)
+            #                 for d in basicInfo_detail_date:
+            #                     # 报告日期
+            #                     reportDate = re.findall("<Date>(.*?)</Date>",d)
+            #                     print(f"reportDate",reportDate[0])
+            #                     xml_list_detail.append(reportDate[0])
+            #                 print("=============================")
+            #
+            #             if xml_list_detail:
+            #                 xml_list_detail.append(ISIN)
+            #                 # xml_list_detail.sort()
+            #                 xml_list.append(xml_list_detail)
+            #
+            # print(xml_list)
         return xml_list
 
 
@@ -459,16 +452,12 @@ if __name__ == '__main__':
 
     # # 校验manager.csv
     # c.compare_manager()
+    # c.compare_holding()
 
     # #获取xml数据
     # c.xml_holding()
-    # # aa = c.xml_holding()
-    # # print("打印根据weight排名前十个：")
-    # # for a in aa:
-    # #     print(a)
+    c.xml_basicInfo()
 
     # # 读取holding.csv内容
     # c.read_holding_csv()
 
-    # 校验holding.csv
-    c.compare_holding()
