@@ -400,8 +400,9 @@ class Comparexml:
                 xml_basicInfo_Operation = re.findall('<Operation>(.*?)</Operation>', xml_basicInfo,re.S)
                 # fundNameSC
                 xml_basicInfo_MultilingualVariation = re.findall(f'<MultilingualVariation _Id="{MS_SECID}">(.*?)</MultilingualVariation>', xml_basicInfo, re.S)
-                # baseCurrency
+                # baseCurrency,基金信息板块下展示该币种
                 xml_basicInfo_PerformanceId = re.findall('<PerformanceId>(.*?)</PerformanceId>', xml_basicInfo, re.S)
+
 
 
                 if xml_basicInfo:
@@ -418,6 +419,9 @@ class Comparexml:
                     basicInfo_MultilingualVariation = basicInfo_list_MultilingualVariation.split('<LanguageVariation _LanguageId="0L00000082">')
                     # basicInfo_PerformanceId = basicInfo_list_PerformanceId.split("</CurrencyId>")
                     basicInfo_PerformanceId = basicInfo_list_PerformanceId[0]
+                    # shareClassCurrency,除基金信息板块外其他页面展示这个币种
+                    basicInfo_shareClassCurrency = basicInfo_list_Operation.split("</Currency>")
+
                     for m in basicInfo_FundShareClass:
                         xml_list_detail = []
                         # 父基金编码
@@ -440,6 +444,11 @@ class Comparexml:
                         if baseCurrency:
                             print(f"baseCurrency:", baseCurrency[0])
                             xml_list_detail.append(baseCurrency[0])
+                        for Currency in basicInfo_shareClassCurrency:
+                            shareClassCurrency = re.findall('<Currency _Id="(.*?)">',Currency)
+                            if shareClassCurrency:
+                                print(f"shareClassCurrency:", shareClassCurrency[0])
+                                xml_list_detail.append(shareClassCurrency[0])
             #                 for d in basicInfo_detail_date:
             #                     # 报告日期
             #                     reportDate = re.findall("<Date>(.*?)</Date>",d)
