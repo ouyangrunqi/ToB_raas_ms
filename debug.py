@@ -408,13 +408,16 @@ class Comparexml:
                     basicInfo_list = xml_basicInfo_FundShareClass[0]
                     basicInfo_list_Operation = xml_basicInfo_Operation[0]
                     basicInfo_list_MultilingualVariation = xml_basicInfo_MultilingualVariation[0]
-                    basicInfo_list_PerformanceId = xml_basicInfo_PerformanceId[-1]
+                    # # 币种位置固定可用
+                    # basicInfo_list_PerformanceId = xml_basicInfo_PerformanceId[-1]
+                    basicInfo_list_PerformanceId = [c for c in xml_basicInfo_PerformanceId if "CurrencyId" in c]
 
 
                     basicInfo_FundShareClass = basicInfo_list.split("</FundShareClass>")
                     basicInfo_ShareClassBasics =basicInfo_list_Operation.split("</LegalName>")
                     basicInfo_MultilingualVariation = basicInfo_list_MultilingualVariation.split('<LanguageVariation _LanguageId="0L00000082">')
-                    basicInfo_PerformanceId = basicInfo_list_PerformanceId.split("<Result>")
+                    # basicInfo_PerformanceId = basicInfo_list_PerformanceId.split("</CurrencyId>")
+                    basicInfo_PerformanceId = basicInfo_list_PerformanceId[0]
                     for m in basicInfo_FundShareClass:
                         xml_list_detail = []
                         # 父基金编码
@@ -432,11 +435,11 @@ class Comparexml:
                             if fundNameSC:
                                 print(f"fundNameSC:", fundNameSC[0])
                                 xml_list_detail.append(fundNameSC[0])
-                        for Currency in basicInfo_PerformanceId:
-                            baseCurrency = re.findall("<CurrencyId>(.*?)</CurrencyId>",Currency)
-                            if baseCurrency:
-                                print(f"baseCurrency:", baseCurrency[0])
-                                xml_list_detail.append(baseCurrency[0])
+                        # for Currency in basicInfo_PerformanceId:
+                        baseCurrency = re.findall("<CurrencyId>(.*)</CurrencyId>",basicInfo_PerformanceId)
+                        if baseCurrency:
+                            print(f"baseCurrency:", baseCurrency[0])
+                            xml_list_detail.append(baseCurrency[0])
             #                 for d in basicInfo_detail_date:
             #                     # 报告日期
             #                     reportDate = re.findall("<Date>(.*?)</Date>",d)
