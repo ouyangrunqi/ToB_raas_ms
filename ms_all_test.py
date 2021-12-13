@@ -15,7 +15,7 @@ class Comparexml:
     def __init__(self):
         # self.url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36'}
-        self.holdingcsv_filepath = r'D:\ms\holding_1639096804132.csv'
+        self.holdingcsv_filepath = r'D:\ms\holding_1639356003699.csv'
 
     def get_white(self):
         '''
