@@ -15,6 +15,7 @@ class Comparexml:
     def __init__(self):
         # self.url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36'}
+        self.managercsv_filepath = r'D:\ms\manager_1639701604086.csv'
         self.holdingcsv_filepath = r'D:\ms\holding_1639356003699.csv'
 
     def get_white(self):
@@ -451,12 +452,8 @@ class Comparexml:
 if __name__ == '__main__':
     c = Comparexml()
 
-    # c.get_white()
-    # c.get_MS_SECID()
-    # c.xml_manager()
-
-    # # 校验manager.csv
-    # c.compare_manager()
+    # 校验manager.csv
+    c.compare_manager()
 
     # #获取xml数据
     # c.xml_holding()
@@ -468,5 +465,5 @@ if __name__ == '__main__':
     # # 读取holding.csv内容
     # c.read_holding_csv()
 
-    # 校验holding.csv
-    c.compare_holding()
+    # # 校验holding.csv
+    # c.compare_holding()

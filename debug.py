@@ -148,7 +148,7 @@ class Comparexml:
 
     def read_manager_csv(self,managercsv_filepath):
         manager_csv_dic = {}
-        with open(managercsv_filepath, 'r', encoding='utf-8') as f:
+        with open(managercsv_filepath, 'r') as f:
             reader = csv.reader(f)
             i = 0
             for row in reader:
@@ -473,18 +473,20 @@ class Comparexml:
 if __name__ == '__main__':
     c = Comparexml()
 
-    # c.get_white()
-    # c.get_MS_SECID()
-    # c.xml_manager()
+    c.xml_manager()
 
     # # 校验manager.csv
     # c.compare_manager()
-    # c.compare_holding()
 
     # #获取xml数据
     # c.xml_holding()
-    c.xml_basicInfo()
+    # # aa = c.xml_holding()
+    # # print("打印根据weight排名前十个：")
+    # # for a in aa:
+    # #     print(a)
 
     # # 读取holding.csv内容
     # c.read_holding_csv()
 
+    # # 校验holding.csv
+    # c.compare_holding()
