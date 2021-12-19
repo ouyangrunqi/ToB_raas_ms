@@ -97,7 +97,11 @@ class Comparexml:
             if res.status_code == 200:
                 print(f">>>>>>>>>>开始获取{MS_SECID}的数据>>>>>>>>>>")
                 xml_managers = res.text
-                xml_manager = re.findall('<ManagerList>(.*?)</ManagerList>',xml_managers,re.S)# 修饰符re.S  使.匹配包括换行在内的所有字符
+                xml_manager = re.findall('<ManagerList>(.*?)</ManagerList>', xml_managers,
+                                         re.S)  # 修饰符re.S  使.匹配包括换行在内的所有字符
+                # 优先取中文名，无中文名取英文名
+                xml_MultilingualVariation = re.findall('<MultilingualVariation _Id="(.*?)"><LanguageVariation _LanguageId="0L00000082">(.*?)</PersonalInformation>',xml_managers, re.S)
+                dm = dict(xml_MultilingualVariation)
 
                 if xml_manager:
                     manager_list = xml_manager[0]
@@ -106,32 +110,47 @@ class Comparexml:
                     for m in manager_detail:
                         xml_list_detail = []
                         # 基金经理任期(管理结束日期)
-                        managerEndDate = re.findall("<EndDate>(.*?)</EndDate>.*",m)
+                        managerEndDate = re.findall("<EndDate>(.*?)</EndDate>.*", m)
                         # csv文件取没有managerEndDate的数据
                         if not managerEndDate:
-                            manager_id = re.findall('<ProfessionalInformation _Id="(.*?)" _Status',m)
+                            manager_id = re.findall('<ProfessionalInformation _Id="(.*?)" _Status', m)
                             if manager_id:
-                                print(f"manager_id:",manager_id[0])
+                                print(f"manager_id:", manager_id[0])
                                 xml_list_detail.append(manager_id[0])
-                                GivenName = re.findall("<GivenName>(.*?)</GivenName>",m)
-                                if GivenName:
-                                    print(f"GivenName:",GivenName[0])
-                                FamilyName = re.findall("<FamilyName>(.*?)</FamilyName>",m)
-                                if FamilyName:
-                                    print(f"FamilyName:",FamilyName[0])
-                                manager_name = GivenName[0] + ' ' + FamilyName[0]
-                                xml_list_detail.append(manager_name)
-                                # 基金经理任期(管理起始日期)
-                                managerStartDate = re.findall("<StartDate>(.*?)</StartDate>",m)
-                                if managerStartDate:
-                                    print(f"managerStartDate:",managerStartDate[0])
-                                    # xml_list_detail.append(managerStartDate[0].replace('-','/').replace('/0','/'))
-                                    xml_list_detail.append(managerStartDate[0])
-
+                                if dm:
+                                    for k, v in dm.items():
+                                        if k == manager_id[0]:
+                                            GivenName_cn = re.findall("<GivenName>(.*?)</GivenName>", v)
+                                            FamilyName_cn = re.findall("<FamilyName>(.*?)</FamilyName>", v)
+                                            manager_name = FamilyName_cn[0] + GivenName_cn[0]
+                                            print(f"GivenName:", GivenName_cn[0])
+                                            print(f"FamilyName:", FamilyName_cn[0])
+                                            xml_list_detail.append(manager_name)
+                                        else:
+                                            GivenName_en = re.findall("<GivenName>(.*?)</GivenName>", m)
+                                            FamilyName_en = re.findall("<FamilyName>(.*?)</FamilyName>", m)
+                                            print(f"GivenName:", GivenName_en[0])
+                                            print(f"FamilyName:", FamilyName_en[0])
+                                            manager_name = GivenName_en[0] + ' ' + FamilyName_en[0]
+                                            xml_list_detail.append(manager_name)
                                 else:
-                                    print("缺少managerStartDate")
-                                    # assert False
-                                print("=============================")
+                                    GivenName_en = re.findall("<GivenName>(.*?)</GivenName>", m)
+                                    FamilyName_en = re.findall("<FamilyName>(.*?)</FamilyName>", m)
+                                    print(f"GivenName:", GivenName_en[0])
+                                    print(f"FamilyName:", FamilyName_en[0])
+                                    manager_name = GivenName_en[0] + ' ' + FamilyName_en[0]
+                                    xml_list_detail.append(manager_name)
+                            # 基金经理任期(管理起始日期)
+                            managerStartDate = re.findall("<StartDate>(.*?)</StartDate>", m)
+                            if managerStartDate:
+                                print(f"managerStartDate:", managerStartDate[0])
+                                # xml_list_detail.append(managerStartDate[0].replace('-','/').replace('/0','/'))
+                                xml_list_detail.append(managerStartDate[0])
+
+                            else:
+                                print("缺少managerStartDate")
+                                # assert False
+                            print("=============================")
 
                         else:
                             pass
