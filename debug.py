@@ -125,6 +125,8 @@ class Comparexml:
                                 selector = etree.XML(data.content)
                                 xml_MultilingualVariation = selector.xpath(f'//MultilingualVariation[@_Id="{manager_id[0]}"]/../MultilingualVariation')
                                 if xml_MultilingualVariation:
+                                    xx = xml_MultilingualVariation[0].text
+                                    print(xx)
                                     # MultilingualVariation = xml_MultilingualVariation[0]
                                     # xml_LanguageVariation = re.findall('<LanguageVariation _LanguageId="0L00000082">(.*?)</PersonalInformation>', MultilingualVariation)
                                     xml_LanguageVariation = selector.xpath('//LanguageVariation[@_LanguageId="0L00000082"]/../LanguageVariation')
@@ -136,13 +138,22 @@ class Comparexml:
                                         # FamilyName_cn = re.findall("<FamilyName>(.*?)</FamilyName>", LanguageVariation_detail, re.S)
                                         FamilyName_cn = selector.xpath(f'//MultilingualVariation[@_Id="{manager_id[0]}"]/LanguageVariation [@_LanguageId="0L00000082"]//FamilyName')
                                         # manager_name = FamilyName_cn[0] + GivenName_cn[0]
-                                        manager_name = FamilyName_cn[0].text + GivenName_cn[0].text
-                                        # print(f"GivenName:", GivenName_cn[0])
-                                        # print(f"FamilyName:", FamilyName_cn[0])
-                                        print(f"GivenName:", GivenName_cn[0].text)
-                                        print(f"FamilyName:", FamilyName_cn[0].text)
+                                        manager_name = FamilyName_cn + GivenName_cn
+                                        if manager_name:
 
-                                        xml_list_detail.append(manager_name)
+                                            # print(f"GivenName:", GivenName_cn[0])
+                                            # print(f"FamilyName:", FamilyName_cn[0])
+                                            print(f"GivenName:", GivenName_cn[0].text)
+                                            print(f"FamilyName:", FamilyName_cn[0].text)
+                                            manager_name = FamilyName_cn[0].text + GivenName_cn[0].text
+                                            xml_list_detail.append(manager_name)
+                                        else:
+                                            GivenName_en = re.findall("<GivenName>(.*?)</GivenName>", m)
+                                            FamilyName_en = re.findall("<FamilyName>(.*?)</FamilyName>", m)
+                                            print(f"GivenName:", GivenName_en[0])
+                                            print(f"FamilyName:", FamilyName_en[0])
+                                            manager_name = GivenName_en[0] + ' ' + FamilyName_en[0]
+                                            xml_list_detail.append(manager_name)
                                     else:
                                         GivenName_en = re.findall("<GivenName>(.*?)</GivenName>", m)
                                         FamilyName_en = re.findall("<FamilyName>(.*?)</FamilyName>", m)
@@ -462,6 +473,8 @@ class Comparexml:
                 xml_basicInfo_MultilingualVariation = re.findall(f'<MultilingualVariation _Id="{MS_SECID}">(.*?)</MultilingualVariation>', xml_basicInfo, re.S)
                 # baseCurrency,基金信息板块下展示该币种
                 xml_basicInfo_PerformanceId = re.findall('<PerformanceId>(.*?)</PerformanceId>', xml_basicInfo, re.S)
+                # fundIndustry,基金所属行业
+
 
 
 
@@ -533,10 +546,10 @@ class Comparexml:
 if __name__ == '__main__':
     c = Comparexml()
 
-    c.xml_manager()
+    # c.xml_manager()
 
     # 校验manager.csv
-    # c.compare_manager()
+    c.compare_manager()
 
     # #获取xml数据
     # c.xml_holding()
@@ -550,3 +563,5 @@ if __name__ == '__main__':
 
     # # 校验holding.csv
     # c.compare_holding()
+    #
+    # c.xml_basicInfo()

@@ -15,7 +15,7 @@ class Comparexml:
     def __init__(self):
         # self.url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36'}
-        self.managercsv_filepath = r'D:\ms\manager_1639701604086.csv'
+        self.managercsv_filepath = r'D:\ms\manager_1640047203356.csv'
         self.holdingcsv_filepath = r'D:\ms\holding_1639356003699.csv'
 
     def get_white(self):
@@ -100,9 +100,8 @@ class Comparexml:
                 xml_manager = re.findall('<ManagerList>(.*?)</ManagerList>', xml_managers,
                                          re.S)  # 修饰符re.S  使.匹配包括换行在内的所有字符
                 # 优先取中文名，无中文名取英文名
-                xml_MultilingualVariation = re.findall('<MultilingualVariation _Id="(.*?)"><LanguageVariation _LanguageId="0L00000082">(.*?)</PersonalInformation>',xml_managers, re.S)
-                dm = dict(xml_MultilingualVariation)
-
+                # xml_MultilingualVariation = re.findall('<MultilingualVariation _Id="(.*?)"><LanguageVariation _LanguageId="0L00000082">(.*?)</PersonalInformation>',xml_managers, re.S)
+                # dm = dict(xml_MultilingualVariation)
                 if xml_manager:
                     manager_list = xml_manager[0]
                     manager_detail = manager_list.split("</ManagerDetail>")
@@ -117,14 +116,34 @@ class Comparexml:
                             if manager_id:
                                 print(f"manager_id:", manager_id[0])
                                 xml_list_detail.append(manager_id[0])
-                                if dm:
-                                    for k, v in dm.items():
-                                        if k == manager_id[0]:
-                                            GivenName_cn = re.findall("<GivenName>(.*?)</GivenName>", v)
-                                            FamilyName_cn = re.findall("<FamilyName>(.*?)</FamilyName>", v)
-                                            manager_name = FamilyName_cn[0] + GivenName_cn[0]
-                                            print(f"GivenName:", GivenName_cn[0])
-                                            print(f"FamilyName:", FamilyName_cn[0])
+
+                                # xml_MultilingualVariation = re.findall(f'<MultilingualVariation _Id="{manager_id[0]}">(.*?)</MultilingualVariation>', m)
+                                # managerStartDate = selector.xpath('//ProfessionalInformation[@_Id="124181"]/../StartDate')
+                                data = requests.get(url=url, headers=self.headers)
+                                selector = etree.XML(data.content)
+                                xml_MultilingualVariation = selector.xpath(f'//MultilingualVariation[@_Id="{manager_id[0]}"]/../MultilingualVariation')
+                                if xml_MultilingualVariation:
+                                    xx = xml_MultilingualVariation[0].text
+                                    # print(xx)
+                                    # MultilingualVariation = xml_MultilingualVariation[0]
+                                    # xml_LanguageVariation = re.findall('<LanguageVariation _LanguageId="0L00000082">(.*?)</PersonalInformation>', MultilingualVariation)
+                                    xml_LanguageVariation = selector.xpath('//LanguageVariation[@_LanguageId="0L00000082"]/../LanguageVariation')
+                                    if xml_LanguageVariation:
+                                        # LanguageVariation_detail = xml_LanguageVariation[0]
+                                        # print(LanguageVariation_detail)
+                                        # GivenName_cn = re.findall("<GivenName>(.*?)</GivenName>", LanguageVariation_detail, re.S)
+                                        GivenName_cn = selector.xpath(f'//MultilingualVariation[@_Id="{manager_id[0]}"]/LanguageVariation [@_LanguageId="0L00000082"]//GivenName')
+                                        # FamilyName_cn = re.findall("<FamilyName>(.*?)</FamilyName>", LanguageVariation_detail, re.S)
+                                        FamilyName_cn = selector.xpath(f'//MultilingualVariation[@_Id="{manager_id[0]}"]/LanguageVariation [@_LanguageId="0L00000082"]//FamilyName')
+                                        # manager_name = FamilyName_cn[0] + GivenName_cn[0]
+                                        manager_name = FamilyName_cn + GivenName_cn
+                                        if manager_name:
+
+                                            # print(f"GivenName:", GivenName_cn[0])
+                                            # print(f"FamilyName:", FamilyName_cn[0])
+                                            print(f"GivenName:", GivenName_cn[0].text)
+                                            print(f"FamilyName:", FamilyName_cn[0].text)
+                                            manager_name = FamilyName_cn[0].text + GivenName_cn[0].text
                                             xml_list_detail.append(manager_name)
                                         else:
                                             GivenName_en = re.findall("<GivenName>(.*?)</GivenName>", m)
@@ -133,6 +152,13 @@ class Comparexml:
                                             print(f"FamilyName:", FamilyName_en[0])
                                             manager_name = GivenName_en[0] + ' ' + FamilyName_en[0]
                                             xml_list_detail.append(manager_name)
+                                    else:
+                                        GivenName_en = re.findall("<GivenName>(.*?)</GivenName>", m)
+                                        FamilyName_en = re.findall("<FamilyName>(.*?)</FamilyName>", m)
+                                        print(f"GivenName:", GivenName_en[0])
+                                        print(f"FamilyName:", FamilyName_en[0])
+                                        manager_name = GivenName_en[0] + ' ' + FamilyName_en[0]
+                                        xml_list_detail.append(manager_name)
                                 else:
                                     GivenName_en = re.findall("<GivenName>(.*?)</GivenName>", m)
                                     FamilyName_en = re.findall("<FamilyName>(.*?)</FamilyName>", m)
@@ -140,6 +166,32 @@ class Comparexml:
                                     print(f"FamilyName:", FamilyName_en[0])
                                     manager_name = GivenName_en[0] + ' ' + FamilyName_en[0]
                                     xml_list_detail.append(manager_name)
+
+
+
+                                # if dm:
+                                #     for k, v in dm.items():
+                                #         if k == manager_id[0]:
+                                #             GivenName_cn = re.findall("<GivenName>(.*?)</GivenName>", v)
+                                #             FamilyName_cn = re.findall("<FamilyName>(.*?)</FamilyName>", v)
+                                #             manager_name = FamilyName_cn[0] + GivenName_cn[0]
+                                #             print(f"GivenName:", GivenName_cn[0])
+                                #             print(f"FamilyName:", FamilyName_cn[0])
+                                #             xml_list_detail.append(manager_name)
+                                #         else:
+                                #             GivenName_en = re.findall("<GivenName>(.*?)</GivenName>", m)
+                                #             FamilyName_en = re.findall("<FamilyName>(.*?)</FamilyName>", m)
+                                #             print(f"GivenName:", GivenName_en[0])
+                                #             print(f"FamilyName:", FamilyName_en[0])
+                                #             manager_name = GivenName_en[0] + ' ' + FamilyName_en[0]
+                                #             xml_list_detail.append(manager_name)
+                                # else:
+                                #     GivenName_en = re.findall("<GivenName>(.*?)</GivenName>", m)
+                                #     FamilyName_en = re.findall("<FamilyName>(.*?)</FamilyName>", m)
+                                #     print(f"GivenName:", GivenName_en[0])
+                                #     print(f"FamilyName:", FamilyName_en[0])
+                                #     manager_name = GivenName_en[0] + ' ' + FamilyName_en[0]
+                                #     xml_list_detail.append(manager_name)
                             # 基金经理任期(管理起始日期)
                             managerStartDate = re.findall("<StartDate>(.*?)</StartDate>", m)
                             if managerStartDate:
@@ -471,8 +523,8 @@ class Comparexml:
 if __name__ == '__main__':
     c = Comparexml()
 
-    # 校验manager.csv
-    c.compare_manager()
+    # # 校验manager.csv
+    # c.compare_manager()
 
     # #获取xml数据
     # c.xml_holding()
@@ -486,3 +538,5 @@ if __name__ == '__main__':
 
     # # 校验holding.csv
     # c.compare_holding()
+
+    c.read_manager_csv()
