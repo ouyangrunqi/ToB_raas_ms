@@ -458,6 +458,13 @@ class Comparexml:
         rowNum = Data_sheet.nrows  # sheet行数
         colNum = Data_sheet.ncols  # sheet列数
         white_dic = {}
+        # 基金类型  1-股票型  2-债券型  3-货币型  4-混合型  8-另类投资型
+        fundInvestType_list = []
+        # 基金地域  0-无地区偏好  10-亚太市场  11-中国市场  21-美国市场  30-欧洲市场  70-新兴市场  90-全球市场
+        fundRegion_list = []
+        # 0-无行业偏好  1-科技  2-消费  3-医疗  4-金融  5-工业  6-房地产  7-公用事业  8-能源  9-通信  10-基础材料
+        # 债券型和货币型没有该字段
+        fundIndustry_list = []
         for i in range(1, rowNum):
             white_list = []
             for j in range(colNum):
