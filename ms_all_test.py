@@ -123,7 +123,7 @@ class Comparexml:
                                 selector = etree.XML(data.content)
                                 xml_MultilingualVariation = selector.xpath(f'//MultilingualVariation[@_Id="{manager_id[0]}"]/../MultilingualVariation')
                                 if xml_MultilingualVariation:
-                                    xx = xml_MultilingualVariation[0].text
+                                    # xx = xml_MultilingualVariation[0].text
                                     # print(xx)
                                     # MultilingualVariation = xml_MultilingualVariation[0]
                                     # xml_LanguageVariation = re.findall('<LanguageVariation _LanguageId="0L00000082">(.*?)</PersonalInformation>', MultilingualVariation)
@@ -215,9 +215,9 @@ class Comparexml:
         return xml_list
 
 
-    def read_manager_csv(self,managercsv_filepath):
+    def read_manager_csv(self):
         manager_csv_dic = {}
-        with open(managercsv_filepath, 'r', encoding='utf-8') as f:
+        with open(self.managercsv_filepath, 'r', encoding='utf-8') as f:
             reader = csv.reader(f)
             i = 0
             for row in reader:
@@ -236,6 +236,7 @@ class Comparexml:
                     row.sort()
                     manager_csv_dic[f"第{i}行"] = row
                 i += 1
+            print(manager_csv_dic)
             return manager_csv_dic
 
     def write_compare_data(self, dirpath_name, cons, times):
@@ -262,7 +263,7 @@ class Comparexml:
         manager_list = self.xml_manager()
         # print(manager_list)
         print(f"ms数据量：",len(manager_list))
-        csv_data = self.read_manager_csv(self.managercsv_filepath)
+        csv_data = self.read_manager_csv()
         print(csv_data)
         print(f"manager.csv数据量：",len(csv_data))
 
@@ -523,8 +524,10 @@ class Comparexml:
 if __name__ == '__main__':
     c = Comparexml()
 
+    # c.xml_manager()
+
     # # 校验manager.csv
-    # c.compare_manager()
+    c.compare_manager()
 
     # #获取xml数据
     # c.xml_holding()
@@ -539,4 +542,4 @@ if __name__ == '__main__':
     # # 校验holding.csv
     # c.compare_holding()
 
-    c.read_manager_csv()
+    # c.read_manager_csv()

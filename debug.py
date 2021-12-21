@@ -9,6 +9,7 @@ import time
 import operator
 import os
 import datetime
+import xlrd
 
 
 class Comparexml:
@@ -18,6 +19,7 @@ class Comparexml:
         self.managercsv_filepath = r'D:\ms\manager_debug.csv'
         self.holdingcsv_filepath = r'D:\ms\holding_debug.csv'
         self.basciInfo_filepath = r'D:\ms\basicInfo_debug.csv'
+        self.white_filepath = r'D:\ms\white_v3.xlsx'
 
 
     def get_white(self):
@@ -125,8 +127,8 @@ class Comparexml:
                                 selector = etree.XML(data.content)
                                 xml_MultilingualVariation = selector.xpath(f'//MultilingualVariation[@_Id="{manager_id[0]}"]/../MultilingualVariation')
                                 if xml_MultilingualVariation:
-                                    xx = xml_MultilingualVariation[0].text
-                                    print(xx)
+                                    # xx = xml_MultilingualVariation[0].text
+                                    # print(xx)
                                     # MultilingualVariation = xml_MultilingualVariation[0]
                                     # xml_LanguageVariation = re.findall('<LanguageVariation _LanguageId="0L00000082">(.*?)</PersonalInformation>', MultilingualVariation)
                                     xml_LanguageVariation = selector.xpath('//LanguageVariation[@_LanguageId="0L00000082"]/../LanguageVariation')
@@ -238,6 +240,7 @@ class Comparexml:
                     row.sort()
                     manager_csv_dic[f"第{i}行"] = row
                 i += 1
+            # print(manager_csv_dic)
             return manager_csv_dic
 
     def write_compare_data(self, dirpath_name, cons, times):
@@ -449,6 +452,23 @@ class Comparexml:
             self.write_compare_data('result_manager.txt', '数据量不一致', times)
 
 
+    def read_xlsx(self):
+        workbook = xlrd.open_workbook(self.white_filepath)
+        Data_sheet = workbook.sheets()[0]  # 通过索引获取
+        rowNum = Data_sheet.nrows  # sheet行数
+        colNum = Data_sheet.ncols  # sheet列数
+        white_dic = {}
+        for i in range(1, rowNum):
+            white_list = []
+            for j in range(colNum):
+                white_list.append(Data_sheet.cell_value(i, j))
+            white_dic[white_list[-3]] = white_list[-2:]
+        print(f'中信白名单_基金分类情况_v3: \n{white_dic}')
+
+
+        return white_dic
+
+
     def xml_basicInfo(self):
         # MS_SECID_list = self.get_MS_SECID()
         xml_list = []
@@ -473,6 +493,9 @@ class Comparexml:
                 xml_basicInfo_MultilingualVariation = re.findall(f'<MultilingualVariation _Id="{MS_SECID}">(.*?)</MultilingualVariation>', xml_basicInfo, re.S)
                 # baseCurrency,基金信息板块下展示该币种
                 xml_basicInfo_PerformanceId = re.findall('<PerformanceId>(.*?)</PerformanceId>', xml_basicInfo, re.S)
+                # 基金市场状态  0-停止  1-开放期  2-募集期
+                xml_basicInfo_Status = re.findall(f'<FundShareClass _Id="{MS_SECID}" _FundId=".*?" _Status="(.*?)">',xml_basicInfo,re.S)
+
                 # fundIndustry,基金所属行业
 
 
@@ -494,6 +517,7 @@ class Comparexml:
                     basicInfo_PerformanceId = basicInfo_list_PerformanceId[0]
                     # shareClassCurrency,除基金信息板块外其他页面展示这个币种
                     basicInfo_shareClassCurrency = basicInfo_list_Operation.split("</Currency>")
+
 
                     for m in basicInfo_FundShareClass:
                         xml_list_detail = []
@@ -522,6 +546,11 @@ class Comparexml:
                             if shareClassCurrency:
                                 print(f"shareClassCurrency:", shareClassCurrency[0])
                                 xml_list_detail.append(shareClassCurrency[0])
+
+                        if basicInfo_Status:
+                           basicInfo_Status = xml_basicInfo_Status[0]
+                           print(f"shareClassCurrency:", basicInfo_Status[0])
+
             #                 for d in basicInfo_detail_date:
             #                     # 报告日期
             #                     reportDate = re.findall("<Date>(.*?)</Date>",d)
@@ -547,9 +576,12 @@ if __name__ == '__main__':
     c = Comparexml()
 
     # c.xml_manager()
+    # managercsv_filepath =c.managercsv_filepath
+    # c.read_manager_csv(managercsv_filepath=managercsv_filepath)
 
-    # 校验manager.csv
-    c.compare_manager()
+
+    # # 校验manager.csv
+    # c.compare_manager()
 
     # #获取xml数据
     # c.xml_holding()
@@ -565,3 +597,4 @@ if __name__ == '__main__':
     # c.compare_holding()
     #
     # c.xml_basicInfo()
+    c.read_xlsx()
