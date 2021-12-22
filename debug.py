@@ -19,7 +19,7 @@ class Comparexml:
         self.managercsv_filepath = r'D:\ms\manager_debug.csv'
         self.holdingcsv_filepath = r'D:\ms\holding_debug.csv'
         self.basciInfo_filepath = r'D:\ms\basicInfo_debug.csv'
-        self.white_filepath = r'D:\ms\white_v3.xlsx'
+        self.white_filepath = r'D:\ms\white_v6.xlsx'
 
 
     def get_white(self):
@@ -459,18 +459,94 @@ class Comparexml:
         colNum = Data_sheet.ncols  # sheet列数
         white_dic = {}
         # 基金类型  1-股票型  2-债券型  3-货币型  4-混合型  8-另类投资型
-        fundInvestType_list = []
+        fundIndustry_list = []
         # 基金地域  0-无地区偏好  10-亚太市场  11-中国市场  21-美国市场  30-欧洲市场  70-新兴市场  90-全球市场
         fundRegion_list = []
         # 0-无行业偏好  1-科技  2-消费  3-医疗  4-金融  5-工业  6-房地产  7-公用事业  8-能源  9-通信  10-基础材料
         # 债券型和货币型没有该字段
         fundIndustry_list = []
+
+        region_dic = {}
+        fundIndustry_dic = {}
+        fundInvestType_dic = {}
+
         for i in range(1, rowNum):
             white_list = []
             for j in range(colNum):
                 white_list.append(Data_sheet.cell_value(i, j))
-            white_dic[white_list[-3]] = white_list[-2:]
-        print(f'中信白名单_基金分类情况_v3: \n{white_dic}')
+            region_dic[white_list[-4]] = white_list[-1]
+            fundIndustry_dic[white_list[-4]] = white_list[-2]
+            fundInvestType_dic[white_list[-4]] = white_list[-3]
+
+        print(f'基金类型_基金分类白名单: \n\t{fundInvestType_dic}')
+        print(f'地区分类_基金分类白名单: \n\t{region_dic}')
+        print(f'行业分类_基金分类白名单: \n\t{fundIndustry_dic}')
+
+
+        # 基金类型  1-股票型  2-债券型  3-货币型  4-混合型  8-另类投资型
+        for k, v in fundInvestType_dic.items():
+            if fundInvestType_dic[k] == '股票型':
+                fundInvestType_dic[k] = "1"
+            elif fundInvestType_dic[k] == '债券型':
+                fundInvestType_dic[k] = "2"
+            elif fundInvestType_dic[k] == '货币型':
+                fundInvestType_dic[k] = "3"
+            elif fundInvestType_dic[k] == '混合型':
+                fundInvestType_dic[k] = "4"
+            else:
+                fundInvestType_dic[k] = "8"
+        print('\n基金类型_basicinfo:\n\t', fundInvestType_dic)
+
+        # 基金地域  0-无地区偏好  10-亚太市场  11-中国市场  21-美国市场  30-欧洲市场  70-新兴市场  90-全球市场
+        for k, v in region_dic.items():
+            if region_dic[k] == "亚太":
+                region_dic[k] = "10"
+            elif region_dic[k] == "中国":
+                region_dic[k] = "11"
+            elif region_dic[k] == "美国":
+                region_dic[k] = "21"
+            elif region_dic[k] == "欧洲":
+                region_dic[k] = "30"
+            elif region_dic[k] == "新兴":
+                region_dic[k] = "70"
+            elif region_dic[k] == "全球":
+                region_dic[k] = "90"
+            elif region_dic[k] == "其他":
+                region_dic[k] = "0"
+            else:
+                region_dic[k] = ""
+        print('地区分类_basicinfo:\n\t', region_dic)
+
+        # 0-无行业偏好  1-科技  2-消费  3-医疗  4-金融  5-工业  6-房地产  7-公用事业  8-能源  9-通信  10-基础材料
+        for k, v in fundIndustry_dic.items():
+            if fundIndustry_dic[k] == "科技":
+                fundIndustry_dic[k] = "1"
+            elif fundIndustry_dic[k] == "消费":
+                fundIndustry_dic[k] = "2"
+            elif fundIndustry_dic[k] == "医疗":
+                fundIndustry_dic[k] = "3"
+            elif fundIndustry_dic[k] == "金融":
+                fundIndustry_dic[k] = "4"
+            elif fundIndustry_dic[k] == "工业":
+                fundIndustry_dic[k] = "5"
+            elif fundIndustry_dic[k] == "房地产":
+                fundIndustry_dic[k] = "6"
+            elif fundIndustry_dic[k] == "公用事业":
+                fundIndustry_dic[k] = "7"
+            elif fundIndustry_dic[k] == "能源":
+                fundIndustry_dic[k] = "8"
+            elif fundIndustry_dic[k] == "通信":
+                fundIndustry_dic[k] = "9"
+            elif fundIndustry_dic[k] == "基础材料":
+                fundIndustry_dic[k] = "10"
+            elif fundIndustry_dic[k] == "其他":
+                fundIndustry_dic[k] = "0"
+            else:
+                fundIndustry_dic[k] = ""
+        print('行业分类_basicinfo:\n\t', fundIndustry_dic)
+
+
+
 
 
         return white_dic
