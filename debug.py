@@ -8,9 +8,10 @@ import re
 import time
 import operator
 import os
-import datetime
+from datetime import datetime
 import xlrd
 
+starttime = datetime.now()
 
 class Comparexml:
     def __init__(self):
@@ -97,12 +98,10 @@ class Comparexml:
             url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
             # url = "https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id=F0GBR06111&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
             res = requests.get(url)
-
             if res.status_code == 200:
                 print(f">>>>>>>>>>开始获取{MS_SECID}的数据>>>>>>>>>>")
                 xml_managers = res.text
-                xml_manager = re.findall('<ManagerList>(.*?)</ManagerList>', xml_managers,
-                                         re.S)  # 修饰符re.S  使.匹配包括换行在内的所有字符
+                xml_manager = re.findall('<ManagerList>(.*?)</ManagerList>', xml_managers,re.S)  # 修饰符re.S  使.匹配包括换行在内的所有字符
                 # 优先取中文名，无中文名取英文名
                 # xml_MultilingualVariation = re.findall('<MultilingualVariation _Id="(.*?)"><LanguageVariation _LanguageId="0L00000082">(.*?)</PersonalInformation>',xml_managers, re.S)
                 # dm = dict(xml_MultilingualVariation)
@@ -120,7 +119,6 @@ class Comparexml:
                             if manager_id:
                                 print(f"manager_id:", manager_id[0])
                                 xml_list_detail.append(manager_id[0])
-
                                 # xml_MultilingualVariation = re.findall(f'<MultilingualVariation _Id="{manager_id[0]}">(.*?)</MultilingualVariation>', m)
                                 # managerStartDate = selector.xpath('//ProfessionalInformation[@_Id="124181"]/../StartDate')
                                 data = requests.get(url=url, headers=self.headers)
@@ -242,6 +240,7 @@ class Comparexml:
                 i += 1
             # print(manager_csv_dic)
             return manager_csv_dic
+
 
     def write_compare_data(self, dirpath_name, cons, times):
         '''
@@ -375,6 +374,7 @@ class Comparexml:
                 print(new_xml_list)
         return new_xml_list
 
+
     def get_weight_num(self,weight_list_detail, weight_list):
         """
         获取weight从大到小的坐标
@@ -387,8 +387,6 @@ class Comparexml:
                     if wd == v:
                         new_weight_num.append(k)
         return new_weight_num
-
-
 
 
     def read_holding_csv(self):
@@ -457,6 +455,7 @@ class Comparexml:
         Data_sheet = workbook.sheets()[0]  # 通过索引获取
         rowNum = Data_sheet.nrows  # sheet行数
         colNum = Data_sheet.ncols  # sheet列数
+        xlsx_list = []
         white_dic = {}
         # 基金类型  1-股票型  2-债券型  3-货币型  4-混合型  8-另类投资型
         fundIndustry_list = []
@@ -478,9 +477,9 @@ class Comparexml:
             fundIndustry_dic[white_list[-4]] = white_list[-2]
             fundInvestType_dic[white_list[-4]] = white_list[-3]
 
-        print(f'基金类型_基金分类白名单: \n\t{fundInvestType_dic}')
-        print(f'地区分类_基金分类白名单: \n\t{region_dic}')
-        print(f'行业分类_基金分类白名单: \n\t{fundIndustry_dic}')
+        # print(f'基金类型_基金分类白名单: \n\t{fundInvestType_dic}')
+        # print(f'地区分类_基金分类白名单: \n\t{region_dic}')
+        # print(f'行业分类_基金分类白名单: \n\t{fundIndustry_dic}')
 
 
         # 基金类型  1-股票型  2-债券型  3-货币型  4-混合型  8-另类投资型
@@ -495,7 +494,8 @@ class Comparexml:
                 fundInvestType_dic[k] = "4"
             else:
                 fundInvestType_dic[k] = "8"
-        print('\n基金类型_basicinfo:\n\t', fundInvestType_dic)
+        # print('\n基金类型_basicinfo:\n\t', fundInvestType_dic)
+        xlsx_list.append(fundInvestType_dic)
 
         # 基金地域  0-无地区偏好  10-亚太市场  11-中国市场  21-美国市场  30-欧洲市场  70-新兴市场  90-全球市场
         for k, v in region_dic.items():
@@ -515,7 +515,8 @@ class Comparexml:
                 region_dic[k] = "0"
             else:
                 region_dic[k] = ""
-        print('地区分类_basicinfo:\n\t', region_dic)
+        # print('地区分类_basicinfo:\n\t', region_dic)
+        xlsx_list.append(region_dic)
 
         # 0-无行业偏好  1-科技  2-消费  3-医疗  4-金融  5-工业  6-房地产  7-公用事业  8-能源  9-通信  10-基础材料
         for k, v in fundIndustry_dic.items():
@@ -543,13 +544,11 @@ class Comparexml:
                 fundIndustry_dic[k] = "0"
             else:
                 fundIndustry_dic[k] = ""
-        print('行业分类_basicinfo:\n\t', fundIndustry_dic)
+        # print('行业分类_basicinfo:\n\t', fundIndustry_dic)
+        xlsx_list.append(fundIndustry_dic)
 
-
-
-
-
-        return white_dic
+        # print(f'\nxlsx_list:\n\t',xlsx_list)
+        return xlsx_list
 
 
     def xml_basicInfo(self):
@@ -573,13 +572,13 @@ class Comparexml:
                 # fundNameEN
                 xml_basicInfo_Operation = re.findall('<Operation>(.*?)</Operation>', xml_basicInfo,re.S)
                 # fundNameSC
-                xml_basicInfo_MultilingualVariation = re.findall(f'<MultilingualVariation _Id="{MS_SECID}">(.*?)</MultilingualVariation>', xml_basicInfo, re.S)
+                # xml_basicInfo_MultilingualVariation = re.findall(f'<MultilingualVariation _Id="{MS_SECID}">(.*?)</MultilingualVariation>', xml_basicInfo, re.S)
                 # baseCurrency,基金信息板块下展示该币种
                 xml_basicInfo_PerformanceId = re.findall('<PerformanceId>(.*?)</PerformanceId>', xml_basicInfo, re.S)
                 # 基金市场状态  0-停止  1-开放期  2-募集期
                 xml_basicInfo_Status = re.findall(f'<FundShareClass _Id="{MS_SECID}" _FundId=".*?" _Status="(.*?)">',xml_basicInfo,re.S)
 
-                # fundIndustry,基金所属行业
+
 
 
 
@@ -587,15 +586,17 @@ class Comparexml:
                 if xml_basicInfo:
                     basicInfo_list = xml_basicInfo_FundShareClass[0]
                     basicInfo_list_Operation = xml_basicInfo_Operation[0]
-                    basicInfo_list_MultilingualVariation = xml_basicInfo_MultilingualVariation[0]
+                    # basicInfo_list_MultilingualVariation = xml_basicInfo_MultilingualVariation[0]
                     # # 币种位置固定可用
                     # basicInfo_list_PerformanceId = xml_basicInfo_PerformanceId[-1]
                     basicInfo_list_PerformanceId = [c for c in xml_basicInfo_PerformanceId if "CurrencyId" in c]
+                    # basicInfo_Status = xml_basicInfo_Status[0]
+
 
 
                     basicInfo_FundShareClass = basicInfo_list.split("</FundShareClass>")
                     basicInfo_ShareClassBasics =basicInfo_list_Operation.split("</LegalName>")
-                    basicInfo_MultilingualVariation = basicInfo_list_MultilingualVariation.split('<LanguageVariation _LanguageId="0L00000082">')
+                    # basicInfo_MultilingualVariation = basicInfo_list_MultilingualVariation.split('<LanguageVariation _LanguageId="0L00000082">')
                     # basicInfo_PerformanceId = basicInfo_list_PerformanceId.split("</CurrencyId>")
                     basicInfo_PerformanceId = basicInfo_list_PerformanceId[0]
                     # shareClassCurrency,除基金信息板块外其他页面展示这个币种
@@ -614,11 +615,16 @@ class Comparexml:
                             if fundNameEN:
                                 print(f"fundNameEN:", fundNameEN[0])
                                 xml_list_detail.append(fundNameEN[0])
-                        for nameSC in basicInfo_MultilingualVariation:
-                            fundNameSC = re.findall("<Name>(.*?)</Name>",nameSC)
-                            if fundNameSC:
-                                print(f"fundNameSC:", fundNameSC[0])
-                                xml_list_detail.append(fundNameSC[0])
+
+                        data = requests.get(url=url, headers=self.headers)
+                        selector = etree.XML(data.content)
+                        xml_MultilingualVariation = selector.xpath(f'//MultilingualVariation[@_Id="{MS_SECID}"]/../MultilingualVariation')
+                        if xml_MultilingualVariation:
+                            xml_LanguageVariation = selector.xpath('//LanguageVariation[@_LanguageId="0L00000082"]/../LanguageVariation')
+                            if xml_LanguageVariation:
+                                fundNameSC = selector.xpath(f'//MultilingualVariation[@_Id="{MS_SECID}"]/LanguageVariation [@_LanguageId="0L00000082"]//Name')
+                                print(f"fundNameSC:", fundNameSC[0].text)
+                                xml_list_detail.append(fundNameSC[0].text)
                         # for Currency in basicInfo_PerformanceId:
                         baseCurrency = re.findall("<CurrencyId>(.*)</CurrencyId>",basicInfo_PerformanceId)
                         if baseCurrency:
@@ -629,11 +635,45 @@ class Comparexml:
                             if shareClassCurrency:
                                 print(f"shareClassCurrency:", shareClassCurrency[0])
                                 xml_list_detail.append(shareClassCurrency[0])
+                        fundStatus = xml_basicInfo_Status[0]
 
-                        if basicInfo_Status:
-                           basicInfo_Status = xml_basicInfo_Status[0]
-                           print(f"shareClassCurrency:", basicInfo_Status[0])
+                        ID = f'{MS_SECID}'
+                        # 基金类型
+                        dict1 = self.read_xlsx()[0]
+                        if ID in dict1:
+                            for k, v in dict1.items():
+                                    if k == ID:
+                                        print(f"fundInvestType:", v)
+                                        xml_list_detail.append(v)
+                        else:
+                            print(f'fundInvestType:"{MS_SECID}"在white_v6中缺少fundInvestType')
+                            xml_list_detail.append("white_v6中缺少fundInvestType")
 
+                        # 地区分类
+                        dict2 = self.read_xlsx()[1]
+                        if ID in dict2:
+                            for k, v in dict2.items():
+                                    if k == ID:
+                                        print(f"fundRegion:", v)
+                                        xml_list_detail.append(v)
+                        else:
+                            print(f'fundRegion:"{MS_SECID}"在white_v6中缺少fundRegion')
+                            xml_list_detail.append("white_v6中缺少fundRegion")
+
+                        # 行业分类
+                        dict3 = self.read_xlsx()[2]
+                        if ID in dict3:
+                            for k, v in dict3.items():
+                                    if k == ID:
+                                        print(f"fundIndustry:", v)
+                                        xml_list_detail.append(v)
+                        else:
+                            print(f'fundIndustry:"{MS_SECID}"在white_v6中缺少fundIndustry')
+                            xml_list_detail.append("white_v6中缺少fundIndustry")
+
+                        if fundStatus:
+                           print(f"fundStatus:", fundStatus[0])
+                           xml_list_detail.append(fundStatus[0])
             #                 for d in basicInfo_detail_date:
             #                     # 报告日期
             #                     reportDate = re.findall("<Date>(.*?)</Date>",d)
@@ -641,17 +681,72 @@ class Comparexml:
             #                     xml_list_detail.append(reportDate[0])
             #                 print("=============================")
             #
-            #             if xml_list_detail:
-            #                 xml_list_detail.append(ISIN)
-            #                 # xml_list_detail.sort()
-            #                 xml_list.append(xml_list_detail)
-            #
-            # print(xml_list)
+                        if xml_list_detail:
+                            xml_list_detail.append(ISIN)
+                            xml_list_detail.sort()
+                            xml_list.append(xml_list_detail)
+
+            print(xml_list)
         return xml_list
 
 
+    def read_basicInfo_csv(self):
+        basicInfo_csv_dic = {}
+        with open(self.basciInfo_filepath, 'r') as f:
+            reader = csv.reader(f)
+            i = 0
+            for row in reader:
+                if i == 0:
+                    pass
+                else:
+                    row = row[0:10]
+                    # start_date = row[3]  # 读取csv中的日期
+                    # if "/" in start_date:
+                    #     csv_managerStartDate = start_date.split("/")  # csv中，年月日，根据"/"切割
+                    #     start_date = self.date_conversion(csv_managerStartDate)  # 把切割后的列表传进日期转换的方法date_conversion()
+                    # if "-" in start_date: # 同理，月份1~9加0，日期1~9加0
+                    #     csv_managerStartDate = start_date.split("-")
+                    #     start_date = self.date_conversion(csv_managerStartDate)
+                    # row[3] = start_date
+                    row.sort()
+                    basicInfo_csv_dic[f"第{i}行"] = row
+                i += 1
+            print(basicInfo_csv_dic)
+            return basicInfo_csv_dic
 
 
+    def compare_basicInfo(self):
+        '''
+        比较 basicInfo.csv文件
+        '''
+        times = self.get_time()
+        print('\n>>>>>>>>>>正在比较basicInfo.csv文件>>>>>>>>>>')
+        basicInfo_list = self.xml_basicInfo()
+        # print(basicInfo_list)
+        print(f"ms数据量：",len(basicInfo_list))
+        csv_data = self.read_basicInfo_csv()
+        # print(csv_data)
+        print(f"basicInfo.csv数据量：",len(csv_data))
+
+        if len(basicInfo_list) == len(csv_data):
+            j = 0
+            for k, v in csv_data.items():
+                i = 0
+                for cm in basicInfo_list:
+                    if operator.eq(cm, v):
+                        i += 1
+                        j += 1
+                    else:
+                        pass
+                # i += 1 # 打印相同数据
+                if i != 1:# 数据相同，i计数+1,即相同的数据不写入txt
+                    self.write_compare_data('result_basicInfo.txt', k, times)
+                    print(f'数据不一致：',k)
+            if j == len(basicInfo_list):# 数据比对相同时，j的计数+1，相同数=总数，数据一致。
+                print('\nbasicInfo.csv >>>校验通过，数据一致!')
+        else:
+            print('数据量不一致')
+            self.write_compare_data('result_manager.txt', '数据量不一致', times)
 
 
 
@@ -678,6 +773,17 @@ if __name__ == '__main__':
 
     # # 校验holding.csv
     # c.compare_holding()
-    #
+
+
+    # 获取xml_basicInfo数据
     # c.xml_basicInfo()
-    c.read_xlsx()
+    # 读取中信白名单_基金分类情况
+    # c.read_xlsx()
+    # 读取basicInfo_csv内容
+    # c.read_basicInfo_csv()
+    # 校验basicInfo.csv内容
+    c.compare_basicInfo()
+
+
+    endtime = datetime.now()
+    print("\nRunTime: {}h-{}m-{}s".format(endtime.hour-starttime.hour, endtime.minute-starttime.minute, endtime.second-starttime.second))
