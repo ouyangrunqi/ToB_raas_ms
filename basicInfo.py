@@ -25,7 +25,7 @@ class Comparexml:
         获取白名单 ISIN==MS_SECID
         '''
         id = []
-        with open('white_debug.txt', 'r', encoding='utf-8')as f:
+        with open('white_all_162.txt', 'r', encoding='utf-8')as f:
             for x in f.readlines():
                 id.append(x.replace('\n', ''))
         return id
@@ -167,7 +167,7 @@ class Comparexml:
             res = requests.get(url)
 
             if res.status_code == 200:
-                print(f">>>>>>>>>>开始获取{MS_SECID}的数据>>>>>>>>>>")
+                print(f">>>>>>>>>>开始获取'{MS_SECID}'的数据>>>>>>>>>>")
                 xml_basicInfo = res.text
                 xml_basicInfo_FundShareClass = re.findall('<FundShareClass .*?>(.*?)</FundShareClass>', xml_basicInfo,re.S)  # 修饰符re.S  使.匹配包括换行在内的所有字符
                 # fundNameEN

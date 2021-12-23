@@ -12,6 +12,7 @@ from datetime import datetime
 import xlrd
 
 starttime = datetime.now()
+print(starttime)
 
 class Comparexml:
     def __init__(self):
@@ -99,7 +100,7 @@ class Comparexml:
             # url = "https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id=F0GBR06111&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
             res = requests.get(url)
             if res.status_code == 200:
-                print(f">>>>>>>>>>开始获取{MS_SECID}的数据>>>>>>>>>>")
+                print(f">>>>>>>>>>开始获取'{MS_SECID}'的数据>>>>>>>>>>")
                 xml_managers = res.text
                 xml_manager = re.findall('<ManagerList>(.*?)</ManagerList>', xml_managers,re.S)  # 修饰符re.S  使.匹配包括换行在内的所有字符
                 # 优先取中文名，无中文名取英文名
@@ -563,6 +564,10 @@ class Comparexml:
             MS_SECID = m[1]
 
             url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
+
+            # basicInfo
+            # fundFactSheet-基金月报  fundStatement-基金章程  fundAnnualReport-年度报告  fundInterimReport-中期报告  fundProspectus-基金说明书
+            url2 = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=512&Currencies=BAS&from=from_parent_mindnote"
             res = requests.get(url)
 
             if res.status_code == 200:
@@ -577,10 +582,6 @@ class Comparexml:
                 xml_basicInfo_PerformanceId = re.findall('<PerformanceId>(.*?)</PerformanceId>', xml_basicInfo, re.S)
                 # 基金市场状态  0-停止  1-开放期  2-募集期
                 xml_basicInfo_Status = re.findall(f'<FundShareClass _Id="{MS_SECID}" _FundId=".*?" _Status="(.*?)">',xml_basicInfo,re.S)
-
-
-
-
 
 
                 if xml_basicInfo:
@@ -617,7 +618,10 @@ class Comparexml:
                                 xml_list_detail.append(fundNameEN[0])
 
                         data = requests.get(url=url, headers=self.headers)
+                        date2 = requests.get(url=url2, headers=self.headers)
                         selector = etree.XML(data.content)
+                        selector2 = etree.XML(date2.content)
+
                         xml_MultilingualVariation = selector.xpath(f'//MultilingualVariation[@_Id="{MS_SECID}"]/../MultilingualVariation')
                         if xml_MultilingualVariation:
                             xml_LanguageVariation = selector.xpath('//LanguageVariation[@_LanguageId="0L00000082"]/../LanguageVariation')
@@ -674,6 +678,257 @@ class Comparexml:
                         if fundStatus:
                            print(f"fundStatus:", fundStatus[0])
                            xml_list_detail.append(fundStatus[0])
+
+                        # 一年夏普比例
+                        sharpeRatioM12 = selector.xpath(f"/FundShareClass/ClassPerformance/Performance/TrailingPerformance[@Type='1000']/RiskAndRating/RiskAnalysis/RiskMeasures/RiskMeasuresDetail[@TimePeriod='M12' and @Type='61']/SharpeRatio")
+                        if sharpeRatioM12:
+                            print(f"sharpeRatioM12:", sharpeRatioM12[0].text)
+                            xml_list_detail.append(sharpeRatioM12[0].text)
+                        else:
+                            print(f"sharpeRatioM12: 数据缺失")
+                            xml_list_detail.append("sharpeRatioM12: N/A")
+
+                        # 三年夏普比例
+                        sharpeRatioM36 = selector.xpath(f"/FundShareClass/ClassPerformance/Performance/TrailingPerformance[@Type='1000']/RiskAndRating/RiskAnalysis/RiskMeasures/RiskMeasuresDetail[@TimePeriod='M36' and @Type='61']/SharpeRatio")
+                        if sharpeRatioM36:
+                            print(f"sharpeRatioM36:", sharpeRatioM36[0].text)
+                            xml_list_detail.append(sharpeRatioM36[0].text)
+                        else:
+                            if sharpeRatioM12:
+                                print(f"sharpeRatioM36:", sharpeRatioM12[0].text)
+                                xml_list_detail.append(sharpeRatioM12[0].text)
+                            else:
+                                print(f"sharpeRatioM12 & sharpeRatioM36: 数据缺失")
+                                xml_list_detail.append("sharpeRatioM12 & sharpeRatioM36: N/A")
+
+                        # 最大一年回撤
+                        maxDrawdownM12 = selector.xpath(
+                            f"/FundShareClass/ClassPerformance/Performance/TrailingPerformance[@Type='1000']/RiskAndRating/RiskAnalysis/RiskMeasures/RiskMeasuresDetail[@TimePeriod='M12' and @Type='61']/MaximumDrawdown")
+                        if maxDrawdownM12:
+                            print(f"maxDrawdownM12:", maxDrawdownM12[0].text)
+                            xml_list_detail.append(maxDrawdownM12[0].text)
+                        else:
+                            print(f"maxDrawdownM12: 数据缺失")
+                            xml_list_detail.append("maxDrawdownM12: N/A")
+
+                        # 最大三年回撤
+                        maxDrawdownM36 = selector.xpath(
+                            f"/FundShareClass/ClassPerformance/Performance/TrailingPerformance[@Type='1000']/RiskAndRating/RiskAnalysis/RiskMeasures/RiskMeasuresDetail[@TimePeriod='M36' and @Type='61']/MaximumDrawdown")
+                        if maxDrawdownM36:
+                            print(f"maxDrawdownM36:", maxDrawdownM36[0].text)
+                            xml_list_detail.append(maxDrawdownM36[0].text)
+                        else:
+                            if maxDrawdownM12:
+                                print(f"sharpeRatioM36:", maxDrawdownM12[0].text)
+                                xml_list_detail.append(maxDrawdownM12[0].text)
+                            else:
+                                print(f"maxDrawdownM12 & maxDrawdownM36: 数据缺失")
+                                xml_list_detail.append("maxDrawdownM12 & maxDrawdownM36: N/A")
+
+                        # 一年波幅
+                        standardDeviationM12 = selector.xpath(
+                            f"/FundShareClass/ClassPerformance/Performance/TrailingPerformance[@Type='1000']/RiskAndRating/RiskAnalysis/RiskMeasures/RiskMeasuresDetail[@TimePeriod='M12' and @Type='61']/StandardDeviation")
+                        if standardDeviationM12:
+                            print(f"standardDeviationM12:", standardDeviationM12[0].text)
+                            xml_list_detail.append(standardDeviationM12[0].text)
+                        else:
+                            print(f"standardDeviationM12: 数据缺失")
+                            xml_list_detail.append("standardDeviationM12: N/A")
+
+                        # 三年波幅
+                        standardDeviationM36 = selector.xpath(
+                            f"/FundShareClass/ClassPerformance/Performance/TrailingPerformance[@Type='1000']/RiskAndRating/RiskAnalysis/RiskMeasures/RiskMeasuresDetail[@TimePeriod='M36' and @Type='61']/StandardDeviation")
+                        if standardDeviationM36:
+                            print(f"standardDeviationM36:", standardDeviationM36[0].text)
+                            xml_list_detail.append(standardDeviationM36[0].text)
+                        else:
+                            if standardDeviationM12:
+                                print(f"standardDeviationM36:", standardDeviationM12[0].text)
+                                xml_list_detail.append(standardDeviationM12[0].text)
+                            else:
+                                print(f"standardDeviationM12 & standardDeviationM36: 数据缺失")
+                                xml_list_detail.append("standardDeviationM12 & standardDeviationM36: N/A")
+
+                        """
+                        分红频率 取最新一条
+                        dividendFrequencyType 
+                        
+                            A$-Annually
+                            a$-Semi-Annually
+                            B$-Bi-Monthly
+                            D$-Daily
+                            M$-Monthly
+                            m$-Semi-Monthly
+                            N$-None
+                            Q$-Quarterly
+                            W$-Weekly 
+                        
+                        """
+
+                        # 股息率：
+                        dividendYield = selector.xpath('//EquityStyleFactor//ProspectiveDividendYield')
+                        if dividendYield:
+                            print(f"dividendYield:", dividendYield[0].text)
+                            xml_list_detail.append(dividendYield[0].text)
+                        else:
+                            print("货币基金无此字段,部分债券基金没有")
+                            xml_list_detail.append("dividendYield: N/A")
+
+                        # 最新股息率
+                        latestDividendYield = selector.xpath('//EquityStatistics//DividendYield')
+                        if latestDividendYield:
+                            print(f"latestDividendYield:", latestDividendYield[0].text)
+                            xml_list_detail.append(latestDividendYield[0].text)
+                        else:
+                            print("货币基金无此字段,部分债券基金没有")
+                            xml_list_detail.append("latestDividendYield: N/A")
+
+                        # 晨星星级
+                        msRating = selector.xpath('//TrailingPerformance[@Type="1000"]//RatingDetail[@TimePeriod="M36"]/Rating/Value')
+                        if msRating:
+                            print(f"msRating:", msRating[0].text)
+                            xml_list_detail.append(msRating[0].text)
+
+                        # 基金规模
+                        fundAssetsSize = selector.xpath('/FundShareClass/Fund/HistoricalOperation/LatestNetAsset/Value')
+                        if fundAssetsSize:
+                            print(f"fundAssetsSize:", fundAssetsSize[0].text)
+                            xml_list_detail.append(fundAssetsSize[0].text)
+
+                        # 成立时间
+                        fundSetupDate = selector.xpath('/FundShareClass/Operation/ShareClassBasics/InceptionDate')
+                        if fundSetupDate:
+                            print(f"fundSetupDate:", fundSetupDate[0].text)
+                            xml_list_detail.append(fundSetupDate[0].text)
+
+                        # 起投金额
+                        minInitialInvestment = selector.xpath('//PurchaseDetail//InitialInvestment')
+                        if minInitialInvestment:
+                            print(f"minInitialInvestment:", minInitialInvestment[0].text)
+                            xml_list_detail.append(minInitialInvestment[0].text)
+
+                        # 最小追加金额
+                        minSubsequentInvestment = selector.xpath('//SubsequentInvestment [@_Unit="1"]')
+                        if minSubsequentInvestment:
+                            print(f"minSubsequentInvestment:", minSubsequentInvestment[0].text)
+                            xml_list_detail.append(minSubsequentInvestment[0].text)
+
+                        # 基金管理公司名称-EN
+                        fundManagementCompanyEN = selector.xpath('/FundShareClass/Fund/FundManagement/ProviderCompany/Company/CompanyOperation/CompanyBasics/Name')
+                        if fundManagementCompanyEN:
+                            print(f"fundManagementCompanyEN:", fundManagementCompanyEN[0].text)
+                            xml_list_detail.append(fundManagementCompanyEN[0].text)
+
+                        # 基金管理公司名称-SC
+                        fundManagementCompanySC = selector.xpath('//CompanyOperation//LanguageVariation[@_LanguageId="0L00000082"]/RegionVariation/Name')
+                        if fundManagementCompanySC:
+                            print(f"fundManagementCompanySC:", fundManagementCompanySC[0].text)
+                            xml_list_detail.append(fundManagementCompanySC[0].text)
+
+                        # 投资目标简述
+                        fundInvestObject = selector.xpath('//ShareClassNarratives[@_LanguageId="0L00000122"]/KIIDObjective')
+                        if fundInvestObject:
+                            print(f"fundInvestObject:", fundInvestObject[0].text)
+                            xml_list_detail.append(fundInvestObject[0].text)
+                        else:
+                            print(f"fundInvestObject: 缺少fundInvestObject")
+                            xml_list_detail.append("")
+
+                        # 基金投资策略简述-EN
+                        fundInvestStrategyEN = selector.xpath('//FundNarratives[@_LanguageId="0L00000122"]//InvestmentStrategy')
+                        if fundInvestStrategyEN:
+                            print(f"fundInvestStrategyEN:", fundInvestStrategyEN[0].text)
+                            xml_list_detail.append(fundInvestStrategyEN[0].text)
+
+                        # 基金投资策略简述-SC
+                        fundInvestStrategySC = selector.xpath('//FundNarratives[@_LanguageId="0L00000482"]//InvestmentStrategy')
+                        if fundInvestStrategySC:
+                            print(f"fundInvestStrategySC:", fundInvestStrategySC[0].text)
+                            xml_list_detail.append(fundInvestStrategySC[0].text)
+
+                        # 基金月报
+                        fundFactSheet = selector2.xpath(f"/FundShareClass/ProprietaryData/LatestDocuments/DocumentType[@_Type='52']/Document[@Market='HKG' and @LanguageId='0L00000122']")
+                        if fundFactSheet:
+                            print(f"fundFactSheet:", fundFactSheet[0].text)
+                            xml_list_detail.append(fundFactSheet[0].text)
+
+                        # 基金章程
+                        fundStatement = selector2.xpath(f"/FundShareClass/ProprietaryData/LatestDocuments/DocumentType[@_Type='76']/Document[@Market='HKG' and @LanguageId='0L00000122']")
+                        if fundStatement:
+                            print(f"fundStatement:", fundStatement[0].text)
+                            xml_list_detail.append(fundStatement[0].text)
+
+                        # 年度报告
+                        fundAnnualReport = selector2.xpath(f"/FundShareClass/ProprietaryData/LatestDocuments/DocumentType[@_Type='4']/Document[@Market='HKG' and @LanguageId='0L00000122']")
+                        if fundAnnualReport:
+                            print(f"fundAnnualReport:", fundAnnualReport[0].text)
+                            xml_list_detail.append(fundAnnualReport[0].text)
+
+                        # 中期报告
+                        fundInterimReport = selector2.xpath(f"/FundShareClass/ProprietaryData/LatestDocuments/DocumentType[@_Type='5']/Document[@Market='HKG' and @LanguageId='0L00000122']")
+                        if fundInterimReport:
+                            print(f"fundInterimReport:", fundInterimReport[0].text)
+                            xml_list_detail.append(fundInterimReport[0].text)
+
+                        # 基金说明书
+                        fundProspectus = selector2.xpath(f"/FundShareClass/ProprietaryData/LatestDocuments/DocumentType[@_Type='1']/Document[@Market='HKG' and @LanguageId='0L00000122']")
+                        if fundProspectus:
+                            print(f"fundProspectus:", fundProspectus[0].text)
+                            xml_list_detail.append(fundProspectus[0].text)
+
+                        # 收益率同类表现排名-1M
+                        peerGroupRankM1 = selector.xpath(f'/FundShareClass/ClassPerformance/Performance/TrailingPerformance/TrailingReturn/Return[@Type="1"]/ReturnDetail[@TimePeriod="M1"]/PeerGroupRank/PeerGroupRankDetail/PercentileRank')
+                        if peerGroupRankM1:
+                            print(f"peerGroupRankM1:", peerGroupRankM1[0].text)
+                            xml_list_detail.append(peerGroupRankM1[0].text)
+
+                        # 收益率同类表现排名-3M
+                        peerGroupRankM3 = selector.xpath(f'/FundShareClass/ClassPerformance/Performance/TrailingPerformance/TrailingReturn/Return[@Type="1"]/ReturnDetail[@TimePeriod="M3"]/PeerGroupRank/PeerGroupRankDetail/PercentileRank')
+                        if peerGroupRankM3:
+                            print(f"peerGroupRankM3:", peerGroupRankM3[0].text)
+                            xml_list_detail.append(peerGroupRankM3[0].text)
+
+                        # 收益率同类表现排名-6M
+                        peerGroupRankM6 = selector.xpath(f'/FundShareClass/ClassPerformance/Performance/TrailingPerformance/TrailingReturn/Return[@Type="1"]/ReturnDetail[@TimePeriod="M6"]/PeerGroupRank/PeerGroupRankDetail/PercentileRank')
+                        if peerGroupRankM6:
+                            print(f"peerGroupRankM6:", peerGroupRankM6[0].text)
+                            xml_list_detail.append(peerGroupRankM6[0].text)
+
+                        # 收益率同类表现排名-12M
+                        peerGroupRankM12 = selector.xpath(f'/FundShareClass/ClassPerformance/Performance/TrailingPerformance/TrailingReturn/Return[@Type="1"]/ReturnDetail[@TimePeriod="M12"]/PeerGroupRank/PeerGroupRankDetail/PercentileRank')
+                        if peerGroupRankM12:
+                            print(f"peerGroupRankM12:", peerGroupRankM12[0].text)
+                            xml_list_detail.append(peerGroupRankM12[0].text)
+
+                        # 收益率同类表现排名-36M
+                        peerGroupRankM36 = selector.xpath(f'/FundShareClass/ClassPerformance/Performance/TrailingPerformance/TrailingReturn/Return[@Type="1"]/ReturnDetail[@TimePeriod="M36"]/PeerGroupRank/PeerGroupRankDetail/PercentileRank')
+                        if peerGroupRankM36:
+                            print(f"peerGroupRankM36:", peerGroupRankM36[0].text)
+                            xml_list_detail.append(peerGroupRankM36[0].text)
+
+                        # 操作费用比率
+                        netExpenseRatio = selector.xpath('//ManagementFee/FeeSchedule/Value')
+                        if netExpenseRatio:
+                            print(f"netExpenseRatio:", netExpenseRatio[0].text)
+                            xml_list_detail.append(netExpenseRatio[0].text)
+                        else:
+                            print(f"netExpenseRatio: 缺少netExpenseRatio")
+                            xml_list_detail.append("")
+
+                        # 年报日期
+                        annualReportDate = selector.xpath(f"/FundShareClass/Operation/AnnualReport[@_Type='1']/Date")
+                        if annualReportDate:
+                            print(f"annualReportDate:", annualReportDate[0].text)
+                            xml_list_detail.append(annualReportDate[0].text)
+
+                        # 管理费
+                        managementFee = selector.xpath(f'/FundShareClass/Operation/Prospectus/ManagementFee/FeeSchedule/Value')
+                        if managementFee:
+                            print(f"managementFee:", managementFee[0].text)
+                            xml_list_detail.append(managementFee[0].text)
+
+
+
             #                 for d in basicInfo_detail_date:
             #                     # 报告日期
             #                     reportDate = re.findall("<Date>(.*?)</Date>",d)
@@ -776,13 +1031,13 @@ if __name__ == '__main__':
 
 
     # 获取xml_basicInfo数据
-    # c.xml_basicInfo()
+    c.xml_basicInfo()
     # 读取中信白名单_基金分类情况
     # c.read_xlsx()
     # 读取basicInfo_csv内容
     # c.read_basicInfo_csv()
     # 校验basicInfo.csv内容
-    c.compare_basicInfo()
+    # c.compare_basicInfo()
 
 
     endtime = datetime.now()
