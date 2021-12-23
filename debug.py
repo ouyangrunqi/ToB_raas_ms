@@ -928,14 +928,6 @@ class Comparexml:
                             xml_list_detail.append(managementFee[0].text)
 
 
-
-            #                 for d in basicInfo_detail_date:
-            #                     # 报告日期
-            #                     reportDate = re.findall("<Date>(.*?)</Date>",d)
-            #                     print(f"reportDate",reportDate[0])
-            #                     xml_list_detail.append(reportDate[0])
-            #                 print("=============================")
-            #
                         if xml_list_detail:
                             xml_list_detail.append(ISIN)
                             xml_list_detail.sort()
@@ -954,15 +946,27 @@ class Comparexml:
                 if i == 0:
                     pass
                 else:
-                    row = row[0:10]
-                    # start_date = row[3]  # 读取csv中的日期
-                    # if "/" in start_date:
-                    #     csv_managerStartDate = start_date.split("/")  # csv中，年月日，根据"/"切割
-                    #     start_date = self.date_conversion(csv_managerStartDate)  # 把切割后的列表传进日期转换的方法date_conversion()
-                    # if "-" in start_date: # 同理，月份1~9加0，日期1~9加0
-                    #     csv_managerStartDate = start_date.split("-")
-                    #     start_date = self.date_conversion(csv_managerStartDate)
-                    # row[3] = start_date
+                    row = row[0:16] + row[17:43]
+                    annualReportDate = row[-3]  # 读取csv中的日期
+                    if "/" in annualReportDate:
+                        csv_managerStartDate = annualReportDate.split("/")  # csv中，年月日，根据"/"切割
+                        annualReportDate = self.date_conversion(csv_managerStartDate)  # 把切割后的列表传进日期转换的方法date_conversion()
+                    if "-" in annualReportDate: # 同理，月份1~9加0，日期1~9加0
+                        csv_managerStartDate = annualReportDate.split("-")
+                        annualReportDate = self.date_conversion(csv_managerStartDate)
+                    row[-3] = annualReportDate
+
+
+                    fundSetupDate = row[20]  # 读取csv中的日期
+                    if "/" in fundSetupDate:
+                        csv_managerStartDate = fundSetupDate.split("/")  # csv中，年月日，根据"/"切割
+                        fundSetupDate = self.date_conversion(
+                            csv_managerStartDate)  # 把切割后的列表传进日期转换的方法date_conversion()
+                    if "-" in fundSetupDate:  # 同理，月份1~9加0，日期1~9加0
+                        csv_managerStartDate = fundSetupDate.split("-")
+                        fundSetupDate = self.date_conversion(csv_managerStartDate)
+                    row[20] = fundSetupDate
+
                     row.sort()
                     basicInfo_csv_dic[f"第{i}行"] = row
                 i += 1
@@ -1030,12 +1034,12 @@ if __name__ == '__main__':
     # c.compare_holding()
 
 
-    # 获取xml_basicInfo数据
-    c.xml_basicInfo()
+    # # 获取xml_basicInfo数据
+    # c.xml_basicInfo()
     # 读取中信白名单_基金分类情况
     # c.read_xlsx()
     # 读取basicInfo_csv内容
-    # c.read_basicInfo_csv()
+    c.read_basicInfo_csv()
     # 校验basicInfo.csv内容
     # c.compare_basicInfo()
 
