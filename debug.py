@@ -1042,6 +1042,7 @@ class Comparexml:
                     for d in distType:
 
                         if d == "100":
+
                             # xml_list_detail.append(f'distType:', d)
                             # 基金类型： 1-股票型  2-债券型  3-货币型  4-混合型  8-另类投资型
                             dict3 = self.read_xlsx()[0]
@@ -1056,13 +1057,17 @@ class Comparexml:
                                                     f"//RegionalExposure/BreakdownValue[@Type={i}]")
                                                 if distKey1:
                                                     key1 = distKey1[0].text
+                                                    x = []
                                                     if key1 != "0":
-                                                        print(f"@Type={i} distKey:", distKey1[0].text)
-                                                        xml_list_detail.append(f"{d}")
-                                                        xml_list_detail.append(f'{i}')
-                                                        xml_list_detail.append(str(round(float(distKey1[0].text) / 100, 6)))
+                                                        print(f"distType={d}---@Type={i}---distKey:", distKey1[0].text)
+                                                        x.append(f"{d}")
+                                                        x.append(f'{i}')
+                                                        x.append(str(round(float(distKey1[0].text) / 100, 6)))
+                                                        x.append(ISIN)
+                                                        xml_list_detail.append(x)
                                                     else:
-                                                        print(f"@Type={i} distKey: 0")
+                                                        print(f"distType={d}---@Type={i}---distKey: 0")
+
 
 
                                         if v == "2":
@@ -1091,16 +1096,13 @@ class Comparexml:
                     #     xml_list_detail.append("maxDrawdownM12: N/A")
 
 
-
+                    #
                     if xml_list_detail:
-                        # xml_list_detail.append(f'distType:', d)
-                        # xml_list_detail.append(f"{d}")
-                        xml_list_detail.append(ISIN)
                         xml_list_detail.sort()
-                        xml_list.append(xml_list_detail)
 
-            print(xml_list)
-        return xml_list
+
+            print(xml_list_detail)
+        return xml_list_detail
 
 
 
