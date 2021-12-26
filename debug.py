@@ -308,7 +308,7 @@ class Comparexml:
             res = requests.get(url)
 
             if res.status_code == 200:
-                print(f">>>>>>>>>>开始获取{MS_SECID}的数据>>>>>>>>>>")
+                print(f">>>>>>>>>>开始获取'{MS_SECID}'的数据>>>>>>>>>>")
                 xml_holding_text = res.text
                 xml_holding = re.findall('<Holding>(.*?)</Holding>', xml_holding_text, re.S)  # 修饰符re.S  使.匹配包括换行在内的所有字符
                 # reportDate在其他位置
@@ -571,7 +571,7 @@ class Comparexml:
             res = requests.get(url)
 
             if res.status_code == 200:
-                print(f">>>>>>>>>>开始获取{MS_SECID}的数据>>>>>>>>>>")
+                print(f">>>>>>>>>>开始获取'{MS_SECID}'的数据>>>>>>>>>>")
                 xml_basicInfo = res.text
                 xml_basicInfo_FundShareClass = re.findall('<FundShareClass .*?>(.*?)</FundShareClass>', xml_basicInfo,re.S)  # 修饰符re.S  使.匹配包括换行在内的所有字符
                 # fundNameEN
@@ -639,19 +639,23 @@ class Comparexml:
                             if shareClassCurrency:
                                 print(f"shareClassCurrency:", shareClassCurrency[0])
                                 xml_list_detail.append(shareClassCurrency[0])
-                        fundStatus = xml_basicInfo_Status[0]
 
                         ID = f'{MS_SECID}'
-                        # 基金类型
-                        dict1 = self.read_xlsx()[0]
+                        # 行业分类
+                        dict1 = self.read_xlsx()[2]
                         if ID in dict1:
                             for k, v in dict1.items():
-                                    if k == ID:
-                                        print(f"fundInvestType:", v)
-                                        xml_list_detail.append(v)
+                                if k == ID:
+                                    print(f"fundIndustry:", v)
+                                    xml_list_detail.append(v)
                         else:
-                            print(f'fundInvestType:"{MS_SECID}"在white_v6中缺少fundInvestType')
-                            xml_list_detail.append("white_v6中缺少fundInvestType")
+                            print(f'fundIndustry:"{MS_SECID}"在white_v6中缺少fundIndustry')
+                            xml_list_detail.append("white_v6中缺少fundIndustry")
+
+                        fundStatus = xml_basicInfo_Status[0]
+                        if fundStatus:
+                            print(f"fundStatus:", fundStatus[0])
+                            xml_list_detail.append(fundStatus[0])
 
                         # 地区分类
                         dict2 = self.read_xlsx()[1]
@@ -664,20 +668,20 @@ class Comparexml:
                             print(f'fundRegion:"{MS_SECID}"在white_v6中缺少fundRegion')
                             xml_list_detail.append("white_v6中缺少fundRegion")
 
-                        # 行业分类
-                        dict3 = self.read_xlsx()[2]
+                        # 基金类型
+                        dict3 = self.read_xlsx()[0]
                         if ID in dict3:
                             for k, v in dict3.items():
                                     if k == ID:
-                                        print(f"fundIndustry:", v)
+                                        print(f"fundInvestType:", v)
                                         xml_list_detail.append(v)
                         else:
-                            print(f'fundIndustry:"{MS_SECID}"在white_v6中缺少fundIndustry')
-                            xml_list_detail.append("white_v6中缺少fundIndustry")
+                            print(f'fundInvestType:"{MS_SECID}"在white_v6中缺少fundInvestType')
+                            xml_list_detail.append("white_v6中缺少fundInvestType")
 
-                        if fundStatus:
-                           print(f"fundStatus:", fundStatus[0])
-                           xml_list_detail.append(fundStatus[0])
+
+
+
 
                         # 一年夏普比例
                         sharpeRatioM12 = selector.xpath(f"/FundShareClass/ClassPerformance/Performance/TrailingPerformance[@Type='1000']/RiskAndRating/RiskAnalysis/RiskMeasures/RiskMeasuresDetail[@TimePeriod='M12' and @Type='61']/SharpeRatio")
@@ -706,7 +710,7 @@ class Comparexml:
                             f"/FundShareClass/ClassPerformance/Performance/TrailingPerformance[@Type='1000']/RiskAndRating/RiskAnalysis/RiskMeasures/RiskMeasuresDetail[@TimePeriod='M12' and @Type='61']/MaximumDrawdown")
                         if maxDrawdownM12:
                             print(f"maxDrawdownM12:", maxDrawdownM12[0].text)
-                            xml_list_detail.append(maxDrawdownM12[0].text)
+                            xml_list_detail.append(str(round(float(maxDrawdownM12[0].text)/100, 4)))
                         else:
                             print(f"maxDrawdownM12: 数据缺失")
                             xml_list_detail.append("maxDrawdownM12: N/A")
@@ -716,11 +720,11 @@ class Comparexml:
                             f"/FundShareClass/ClassPerformance/Performance/TrailingPerformance[@Type='1000']/RiskAndRating/RiskAnalysis/RiskMeasures/RiskMeasuresDetail[@TimePeriod='M36' and @Type='61']/MaximumDrawdown")
                         if maxDrawdownM36:
                             print(f"maxDrawdownM36:", maxDrawdownM36[0].text)
-                            xml_list_detail.append(maxDrawdownM36[0].text)
+                            xml_list_detail.append(str(round(float(maxDrawdownM36[0].text)/100, 4)))
                         else:
                             if maxDrawdownM12:
                                 print(f"sharpeRatioM36:", maxDrawdownM12[0].text)
-                                xml_list_detail.append(maxDrawdownM12[0].text)
+                                xml_list_detail.append(str(round(float(maxDrawdownM12[0].text)/100, 4)))
                             else:
                                 print(f"maxDrawdownM12 & maxDrawdownM36: 数据缺失")
                                 xml_list_detail.append("maxDrawdownM12 & maxDrawdownM36: N/A")
@@ -730,7 +734,7 @@ class Comparexml:
                             f"/FundShareClass/ClassPerformance/Performance/TrailingPerformance[@Type='1000']/RiskAndRating/RiskAnalysis/RiskMeasures/RiskMeasuresDetail[@TimePeriod='M12' and @Type='61']/StandardDeviation")
                         if standardDeviationM12:
                             print(f"standardDeviationM12:", standardDeviationM12[0].text)
-                            xml_list_detail.append(standardDeviationM12[0].text)
+                            xml_list_detail.append(str(round(float(standardDeviationM12[0].text)/100, 4)))
                         else:
                             print(f"standardDeviationM12: 数据缺失")
                             xml_list_detail.append("standardDeviationM12: N/A")
@@ -740,11 +744,11 @@ class Comparexml:
                             f"/FundShareClass/ClassPerformance/Performance/TrailingPerformance[@Type='1000']/RiskAndRating/RiskAnalysis/RiskMeasures/RiskMeasuresDetail[@TimePeriod='M36' and @Type='61']/StandardDeviation")
                         if standardDeviationM36:
                             print(f"standardDeviationM36:", standardDeviationM36[0].text)
-                            xml_list_detail.append(standardDeviationM36[0].text)
+                            xml_list_detail.append(str(round(float(standardDeviationM36[0].text)/100, 4)))
                         else:
                             if standardDeviationM12:
                                 print(f"standardDeviationM36:", standardDeviationM12[0].text)
-                                xml_list_detail.append(standardDeviationM12[0].text)
+                                xml_list_detail.append(str(round(float(standardDeviationM12[0].text)/100, 4)))
                             else:
                                 print(f"standardDeviationM12 & standardDeviationM36: 数据缺失")
                                 xml_list_detail.append("standardDeviationM12 & standardDeviationM36: N/A")
@@ -841,7 +845,7 @@ class Comparexml:
                             xml_list_detail.append(fundInvestStrategyEN[0].text)
 
                         # 基金投资策略简述-SC
-                        fundInvestStrategySC = selector.xpath('//FundNarratives[@_LanguageId="0L00000482"]//InvestmentStrategy')
+                        fundInvestStrategySC = selector.xpath('//FundNarratives[@_LanguageId="0L00000082"]//InvestmentStrategy')
                         if fundInvestStrategySC:
                             print(f"fundInvestStrategySC:", fundInvestStrategySC[0].text)
                             xml_list_detail.append(fundInvestStrategySC[0].text)
@@ -910,7 +914,7 @@ class Comparexml:
                         netExpenseRatio = selector.xpath('//ManagementFee/FeeSchedule/Value')
                         if netExpenseRatio:
                             print(f"netExpenseRatio:", netExpenseRatio[0].text)
-                            xml_list_detail.append(netExpenseRatio[0].text)
+                            xml_list_detail.append(str(round(float(netExpenseRatio[0].text)/100, 4)))
                         else:
                             print(f"netExpenseRatio: 缺少netExpenseRatio")
                             xml_list_detail.append("")
@@ -927,6 +931,10 @@ class Comparexml:
                             print(f"managementFee:", managementFee[0].text)
                             xml_list_detail.append(managementFee[0].text)
 
+                        # categoryId = selector.xpath(f"/FundShareClass[@_Status='1']/Fund/FundBasics/@_CategoryId")
+                        # if categoryId:
+                        #     print(f"categoryId:", categoryId[0].text)
+                        #     xml_list_detail.append(categoryId[0].text)
 
                         if xml_list_detail:
                             xml_list_detail.append(ISIN)
@@ -1008,6 +1016,93 @@ class Comparexml:
             self.write_compare_data('result_manager.txt', '数据量不一致', times)
 
 
+    def xml_distribution(self):
+        xml_list = []
+        id_list = self.get_white()
+        for m in id_list:
+            m = m.split('==')
+            ISIN = m[0]
+            MS_SECID = m[1]
+
+            url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
+
+            res = requests.get(url)
+
+            if res.status_code == 200:
+                print(f">>>>>>>>>>开始获取'{MS_SECID}'的数据>>>>>>>>>>")
+                xml_distribution = res.text
+
+                if xml_distribution:
+                    data = requests.get(url=url, headers=self.headers)
+                    selector = etree.XML(data.content)
+                    xml_list_detail = []
+
+                    ID = f'{MS_SECID}'
+                    distType = ["100", "200", "300"] # 100-地区分布  200-行业分布  300-资产类型分布
+                    for d in distType:
+
+                        if d == "100":
+                            # xml_list_detail.append(f'distType:', d)
+                            # 基金类型： 1-股票型  2-债券型  3-货币型  4-混合型  8-另类投资型
+                            dict3 = self.read_xlsx()[0]
+                            if ID in dict3:
+                                for k, v in dict3.items():
+                                    if k == ID:
+                                        if v == "1":  # 股票型
+                                            # @Type=1 美国
+                                            for i in range(1,17):
+                                                # print(i)
+                                                distKey1 = selector.xpath(
+                                                    f"//RegionalExposure/BreakdownValue[@Type={i}]")
+                                                if distKey1:
+                                                    key1 = distKey1[0].text
+                                                    if key1 != "0":
+                                                        print(f"@Type={i} distKey:", distKey1[0].text)
+                                                        xml_list_detail.append(f"{d}")
+                                                        xml_list_detail.append(f'{i}')
+                                                        xml_list_detail.append(str(round(float(distKey1[0].text) / 100, 6)))
+                                                    else:
+                                                        print(f"@Type={i} distKey: 0")
+
+
+                                        if v == "2":
+                                            pass
+                                        if v == "3":
+                                            pass
+                                        if v == "4":
+                                            pass
+                                        # else:
+                                        #     print('22')
+                                            # print(f"fundInvestType:", v)
+                                            # xml_list_detail.append(v)
+                            # else:
+                            #     print(f'fundInvestType:"{MS_SECID}"在white_v6中缺少fundInvestType')
+                            #     xml_list_detail.append("white_v6中缺少fundInvestType")
+
+
+                    # # 最大一年回撤
+                    # maxDrawdownM12 = selector.xpath(
+                    #     f"/FundShareClass/ClassPerformance/Performance/TrailingPerformance[@Type='1000']/RiskAndRating/RiskAnalysis/RiskMeasures/RiskMeasuresDetail[@TimePeriod='M12' and @Type='61']/MaximumDrawdown")
+                    # if maxDrawdownM12:
+                    #     print(f"maxDrawdownM12:", maxDrawdownM12[0].text)
+                    #     xml_list_detail.append(str(round(float(maxDrawdownM12[0].text) / 100, 4)))
+                    # else:
+                    #     print(f"maxDrawdownM12: 数据缺失")
+                    #     xml_list_detail.append("maxDrawdownM12: N/A")
+
+
+
+                    if xml_list_detail:
+                        # xml_list_detail.append(f'distType:', d)
+                        # xml_list_detail.append(f"{d}")
+                        xml_list_detail.append(ISIN)
+                        xml_list_detail.sort()
+                        xml_list.append(xml_list_detail)
+
+            print(xml_list)
+        return xml_list
+
+
 
 if __name__ == '__main__':
     c = Comparexml()
@@ -1039,10 +1134,12 @@ if __name__ == '__main__':
     # 读取中信白名单_基金分类情况
     # c.read_xlsx()
     # 读取basicInfo_csv内容
-    c.read_basicInfo_csv()
+    # c.read_basicInfo_csv()
     # 校验basicInfo.csv内容
     # c.compare_basicInfo()
 
+
+    c.xml_distribution()
 
     endtime = datetime.now()
     print("\nRunTime: {}h-{}m-{}s".format(endtime.hour-starttime.hour, endtime.minute-starttime.minute, endtime.second-starttime.second))
