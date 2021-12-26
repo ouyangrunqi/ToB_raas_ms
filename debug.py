@@ -1042,39 +1042,92 @@ class Comparexml:
                     for d in distType:
 
                         if d == "100":
-
-                            # xml_list_detail.append(f'distType:', d)
                             # 基金类型： 1-股票型  2-债券型  3-货币型  4-混合型  8-另类投资型
                             dict3 = self.read_xlsx()[0]
                             if ID in dict3:
                                 for k, v in dict3.items():
                                     if k == ID:
                                         if v == "1":  # 股票型
-                                            # @Type=1 美国
                                             for i in range(1,17):
-                                                # print(i)
-                                                distKey1 = selector.xpath(
+                                                distKey = selector.xpath(
                                                     f"//RegionalExposure/BreakdownValue[@Type={i}]")
-                                                if distKey1:
-                                                    key1 = distKey1[0].text
+                                                reportDate = selector.xpath(
+                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
+                                                if distKey:
+                                                    key1 = distKey[0].text
                                                     x = []
                                                     if key1 != "0":
-                                                        print(f"distType={d}---@Type={i}---distKey:", distKey1[0].text)
+                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
                                                         x.append(f"{d}")
                                                         x.append(f'{i}')
-                                                        x.append(str(round(float(distKey1[0].text) / 100, 6)))
+                                                        x.append(str(round(float(distKey[0].text) / 100, 6)))
                                                         x.append(ISIN)
+                                                        x.append(reportDate[0].text)
                                                         xml_list_detail.append(x)
                                                     else:
                                                         print(f"distType={d}---@Type={i}---distKey: 0")
 
+                                        if v == "2":  # 债券型
+                                            for i in range(1, 17):
+                                                distKey = selector.xpath(
+                                                    f"//BondRegionalExposure/BreakdownValue[@Type={i}]")
+                                                reportDate = selector.xpath(
+                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
+                                                if distKey:
+                                                    key1 = distKey[0].text
+                                                    x = []
+                                                    if key1 != "0":
+                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
+                                                        x.append(f"{d}")
+                                                        x.append(f'{i}')
+                                                        x.append(str(round(float(distKey[0].text) / 100, 6)))
+                                                        x.append(ISIN)
+                                                        x.append(reportDate[0].text)
+                                                        xml_list_detail.append(x)
+                                                    else:
+                                                        print(f"distType={d}---@Type={i}---distKey: 0")
 
+                                        if v == "3":  # 货币型
+                                            for i in range(1, 17):
+                                                distKey = selector.xpath(
+                                                    f"//BondRegionalExposure/BreakdownValue[@Type={i}]")
+                                                reportDate = selector.xpath(
+                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
+                                                if distKey:
+                                                    key1 = distKey[0].text
+                                                    x = []
+                                                    if key1 != "0":
+                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
+                                                        x.append(f"{d}")
+                                                        x.append(f'{i}')
+                                                        x.append(str(round(float(distKey[0].text) / 100, 6)))
+                                                        x.append(ISIN)
+                                                        x.append(reportDate[0].text)
+                                                        xml_list_detail.append(x)
+                                                    else:
+                                                        print(f"distType={d}---@Type={i}---distKey: 0")
 
-                                        if v == "2":
-                                            pass
-                                        if v == "3":
-                                            pass
-                                        if v == "4":
+                                        if v == "4":  # 混合型
+                                            for i in range(1, 17):
+                                                distKey = selector.xpath(
+                                                    f"//RegionalExposure/BreakdownValue[@Type={i}]")
+                                                reportDate = selector.xpath(
+                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
+                                                if distKey:
+                                                    key1 = distKey[0].text
+                                                    x = []
+                                                    if key1 != "0":
+                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
+                                                        x.append(f"{d}")
+                                                        x.append(f'{i}')
+                                                        x.append(str(round(float(distKey[0].text) / 100, 6)))
+                                                        x.append(ISIN)
+                                                        x.append(reportDate[0].text)
+                                                        xml_list_detail.append(x)
+                                                    else:
+                                                        print(f"distType={d}---@Type={i}---distKey: 0")
+
+                                        if v == "8":  # 另类投资型
                                             pass
                                         # else:
                                         #     print('22')
@@ -1099,10 +1152,10 @@ class Comparexml:
                     #
                     if xml_list_detail:
                         xml_list_detail.sort()
+                        xml_list.append(xml_list_detail)
 
-
-            print(xml_list_detail)
-        return xml_list_detail
+            print(xml_list)
+        return xml_list
 
 
 
