@@ -1147,13 +1147,7 @@ class Comparexml:
 
                                         if v == "8":  # 另类投资型
                                             pass
-                                        # else:
-                                        #     print('22')
-                                            # print(f"fundInvestType:", v)
-                                            # xml_list_detail.append(v)
-                            # else:
-                            #     print(f'fundInvestType:"{MS_SECID}"在white_v6中缺少fundInvestType')
-                            #     xml_list_detail.append("white_v6中缺少fundInvestType")
+
                         if d == "200":
                             """
                                 101 Basic Materials---基础材料
@@ -1222,6 +1216,70 @@ class Comparexml:
 
                                         if v == "8":  # 另类投资型
                                             pass
+
+                        if d == "300":
+                            dict3 = self.read_xlsx()[0]
+                            if ID in dict3:
+                                for k, v in dict3.items():
+                                    if k == ID:
+                                        if v == "2":  # 债券型
+                                            """                      
+                                                10 Government---政府债券
+                                                20 Municipal---市政债券
+                                                30 Corporate---企业债券
+                                                40 Securitized---证券化资产
+                                                50 Cash & Equivalents---现金及现金等价物
+                                                60 Derivative---衍生品
+                                            """
+                                            for i in range(10, 70, 10):
+                                                distKey = selector.xpath(
+                                                    f'//GlobalBondSector/GlobalBondSectorBreakdown[@Level="1"]/BreakdownValue[@Type={i}]')
+                                                reportDate = selector.xpath(
+                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
+                                                if distKey:
+                                                    key1 = distKey[0].text
+                                                    x = []
+                                                    if key1 != "0":
+                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
+                                                        x.append(f"{d}")
+                                                        x.append(f'{i}')
+                                                        x.append(str(round(float(distKey[0].text) / 100, 6)))
+                                                        x.append(ISIN)
+                                                        x.append(reportDate[0].text)
+                                                        xml_list_detail.append(x)
+                                                    else:
+                                                        print(f"distType={d}---@Type={i}---distKey: 0")
+
+                                        else:
+                                            """                      
+                                             1 Stock---股票
+                                             3 Bond---债券
+                                             5 Preferred---优先股
+                                             6 Convertible---可转债
+                                             7 Cash---现金
+                                             8 Other---其他
+                                            """
+                                            AssetType_list = [1, 3, 5, 6, 7, 8]
+                                            for i in AssetType_list:
+                                                distKey = selector.xpath(
+                                                    f'//PortfolioBreakdown [@_SalePosition="L"]/AssetAllocation/BreakdownValue[@Type={i}]')
+                                                reportDate = selector.xpath(
+                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
+                                                if distKey:
+                                                    key1 = distKey[0].text
+                                                    x = []
+                                                    if key1 != "0":
+                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
+                                                        x.append(f"{d}")
+                                                        x.append(f'{i}')
+                                                        x.append(str(round(float(distKey[0].text) / 100, 6)))
+                                                        x.append(ISIN)
+                                                        x.append(reportDate[0].text)
+                                                        xml_list_detail.append(x)
+                                                    else:
+                                                        print(f"distType={d}---@Type={i}---distKey: 0")
+
+
                                         # else:
                                         #     print('22')
                                             # print(f"fundInvestType:", v)
