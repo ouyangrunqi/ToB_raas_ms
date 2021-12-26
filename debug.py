@@ -1042,7 +1042,25 @@ class Comparexml:
                     for d in distType:
 
                         if d == "100":
-                            # 基金类型： 1-股票型  2-债券型  3-货币型  4-混合型  8-另类投资型
+                            """
+                            地区分布
+                            1 United States---美国
+                            2 Canada---加拿大
+                            3 Latin America---拉丁美洲
+                            4 United Kingdom---英国
+                            5 Eurozone---欧元区
+                            6 Europe - ex Euro---欧洲-欧元以外
+                            7 Europe - Emerging---欧洲-新兴市场
+                            8 Africa---非洲
+                            9 Middle East---中东地区
+                            10 Japan---日本
+                            11 Australasia---大洋洲
+                            12 Asia - Developed---亚洲--发达国家
+                            13 Asia - Emerging---亚洲
+                            14 Emerging Market---新兴市场
+                            15 Developed Country---发达国家
+                            16 Not Classified---未分类
+                            """
                             dict3 = self.read_xlsx()[0]
                             if ID in dict3:
                                 for k, v in dict3.items():
@@ -1136,7 +1154,81 @@ class Comparexml:
                             # else:
                             #     print(f'fundInvestType:"{MS_SECID}"在white_v6中缺少fundInvestType')
                             #     xml_list_detail.append("white_v6中缺少fundInvestType")
+                        if d == "200":
+                            """
+                                101 Basic Materials---基础材料
+                                102 Consumer Cyclical---周期性消费品
+                                103 Financial Services---金融服务
+                                104 Real Estate---房地产
+                                205 Consumer Defensive---必需品类消费品
+                                206 Healthcare---医疗保健
+                                207 Utilities---公用事业
+                                308 Communication Services---通信服务
+                                309 Energy---能源
+                                310 Industrials---工业类
+                                311 Technology---技行业
+                            """
+                            dict3 = self.read_xlsx()[0]
+                            if ID in dict3:
+                                for k, v in dict3.items():
+                                    if k == ID:
+                                        if v == "1":  # 股票型
+                                            industry_list = [101, 102, 103, 104, 205, 206, 207, 308, 309, 310, 311]
+                                            for i in industry_list:
+                                                distKey = selector.xpath(
+                                                    f"//GlobalStockSectorBreakdown/BreakdownValue[@Type={i}]")
+                                                reportDate = selector.xpath(
+                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
+                                                if distKey:
+                                                    key1 = distKey[0].text
+                                                    x = []
+                                                    if key1 != "0":
+                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
+                                                        x.append(f"{d}")
+                                                        x.append(f'{i}')
+                                                        x.append(str(round(float(distKey[0].text) / 100, 6)))
+                                                        x.append(ISIN)
+                                                        x.append(reportDate[0].text)
+                                                        xml_list_detail.append(x)
+                                                    else:
+                                                        print(f"distType={d}---@Type={i}---distKey: 0")
 
+                                        if v == "2":  # 债券型
+                                            pass
+
+                                        if v == "3":  # 货币型
+                                            pass
+
+                                        if v == "4":  # 混合型
+                                            industry_list = [101, 102, 103, 104, 205, 206, 207, 308, 309, 310, 311]
+                                            for i in industry_list:
+                                                distKey = selector.xpath(
+                                                    f"//GlobalStockSectorBreakdown/BreakdownValue[@Type={i}]")
+                                                reportDate = selector.xpath(
+                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
+                                                if distKey:
+                                                    key1 = distKey[0].text
+                                                    x = []
+                                                    if key1 != "0":
+                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
+                                                        x.append(f"{d}")
+                                                        x.append(f'{i}')
+                                                        x.append(str(round(float(distKey[0].text) / 100, 6)))
+                                                        x.append(ISIN)
+                                                        x.append(reportDate[0].text)
+                                                        xml_list_detail.append(x)
+                                                    else:
+                                                        print(f"distType={d}---@Type={i}---distKey: 0")
+
+                                        if v == "8":  # 另类投资型
+                                            pass
+                                        # else:
+                                        #     print('22')
+                                            # print(f"fundInvestType:", v)
+                                            # xml_list_detail.append(v)
+                            # else:
+                            #     print(f'fundInvestType:"{MS_SECID}"在white_v6中缺少fundInvestType')
+                            #     xml_list_detail.append("white_v6中缺少fundInvestType")
 
                     # # 最大一年回撤
                     # maxDrawdownM12 = selector.xpath(
