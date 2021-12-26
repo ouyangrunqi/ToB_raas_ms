@@ -1069,7 +1069,7 @@ class Comparexml:
                                         if v == "1":  # 股票型
                                             for i in range(1,17):
                                                 distKey = selector.xpath(
-                                                    f"//RegionalExposure/BreakdownValue[@Type={i}]")
+                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioBreakdown[@_SalePosition='L']/RegionalExposure/BreakdownValue[@Type={i}]")
                                                 reportDate = selector.xpath(
                                                     f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
                                                 if distKey:
@@ -1082,6 +1082,7 @@ class Comparexml:
                                                         x.append(str(round(float(distKey[0].text) / 100, 6)))
                                                         x.append(ISIN)
                                                         x.append(reportDate[0].text)
+                                                        x.sort()
                                                         xml_list_detail.append(x)
                                                     else:
                                                         print(f"distType={d}---@Type={i}---distKey: 0")
@@ -1102,6 +1103,7 @@ class Comparexml:
                                                         x.append(str(round(float(distKey[0].text) / 100, 6)))
                                                         x.append(ISIN)
                                                         x.append(reportDate[0].text)
+                                                        x.sort()
                                                         xml_list_detail.append(x)
                                                     else:
                                                         print(f"distType={d}---@Type={i}---distKey: 0")
@@ -1122,6 +1124,7 @@ class Comparexml:
                                                         x.append(str(round(float(distKey[0].text) / 100, 6)))
                                                         x.append(ISIN)
                                                         x.append(reportDate[0].text)
+                                                        x.sort()
                                                         xml_list_detail.append(x)
                                                     else:
                                                         print(f"distType={d}---@Type={i}---distKey: 0")
@@ -1142,6 +1145,7 @@ class Comparexml:
                                                         x.append(str(round(float(distKey[0].text) / 100, 6)))
                                                         x.append(ISIN)
                                                         x.append(reportDate[0].text)
+                                                        x.sort()
                                                         xml_list_detail.append(x)
                                                     else:
                                                         print(f"distType={d}---@Type={i}---distKey: 0")
@@ -1171,7 +1175,7 @@ class Comparexml:
                                             industry_list = [101, 102, 103, 104, 205, 206, 207, 308, 309, 310, 311]
                                             for i in industry_list:
                                                 distKey = selector.xpath(
-                                                    f"//GlobalStockSectorBreakdown/BreakdownValue[@Type={i}]")
+                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioBreakdown[@_SalePosition='L']/GlobalStockSectorBreakdown/BreakdownValue[@Type={i}]")
                                                 reportDate = selector.xpath(
                                                     f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
                                                 if distKey:
@@ -1184,6 +1188,7 @@ class Comparexml:
                                                         x.append(str(round(float(distKey[0].text) / 100, 6)))
                                                         x.append(ISIN)
                                                         x.append(reportDate[0].text)
+                                                        x.sort()
                                                         xml_list_detail.append(x)
                                                     else:
                                                         print(f"distType={d}---@Type={i}---distKey: 0")
@@ -1211,6 +1216,7 @@ class Comparexml:
                                                         x.append(str(round(float(distKey[0].text) / 100, 6)))
                                                         x.append(ISIN)
                                                         x.append(reportDate[0].text)
+                                                        x.sort()
                                                         xml_list_detail.append(x)
                                                     else:
                                                         print(f"distType={d}---@Type={i}---distKey: 0")
@@ -1247,6 +1253,7 @@ class Comparexml:
                                                         x.append(str(round(float(distKey[0].text) / 100, 6)))
                                                         x.append(ISIN)
                                                         x.append(reportDate[0].text)
+                                                        x.sort()
                                                         xml_list_detail.append(x)
                                                     else:
                                                         print(f"distType={d}---@Type={i}---distKey: 0")
@@ -1263,7 +1270,7 @@ class Comparexml:
                                             AssetType_list = [1, 3, 5, 6, 7, 8]
                                             for i in AssetType_list:
                                                 distKey = selector.xpath(
-                                                    f'//PortfolioBreakdown [@_SalePosition="L"]/AssetAllocation/BreakdownValue[@Type={i}]')
+                                                    f'/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioBreakdown [@_SalePosition="L"]/AssetAllocation/BreakdownValue[@Type={i}]')
                                                 reportDate = selector.xpath(
                                                     f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
                                                 if distKey:
@@ -1276,14 +1283,16 @@ class Comparexml:
                                                         x.append(str(round(float(distKey[0].text) / 100, 6)))
                                                         x.append(ISIN)
                                                         x.append(reportDate[0].text)
+                                                        x.sort()
                                                         xml_list_detail.append(x)
                                                     else:
                                                         print(f"distType={d}---@Type={i}---distKey: 0")
 
                     if xml_list_detail:
-                        xml_list_detail.sort()
-                        xml_list.append(xml_list_detail)
-
+                        # xml_list_detail.sort()
+                        for x in xml_list_detail:
+                            xml_list.append(x)
+                            xml_list.sort()
             print(xml_list)
         return xml_list
 
