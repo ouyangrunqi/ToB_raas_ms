@@ -21,6 +21,7 @@ class Comparexml:
         self.managercsv_filepath = r'D:\ms\manager_debug.csv'
         self.holdingcsv_filepath = r'D:\ms\holding_debug.csv'
         self.basciInfo_filepath = r'D:\ms\basicInfo_debug.csv'
+        self.distribution_filepath = r'D:\ms\distribution_debug.csv'
         self.white_filepath = r'D:\ms\white_v6.xlsx'
 
 
@@ -1279,27 +1280,6 @@ class Comparexml:
                                                     else:
                                                         print(f"distType={d}---@Type={i}---distKey: 0")
 
-
-                                        # else:
-                                        #     print('22')
-                                            # print(f"fundInvestType:", v)
-                                            # xml_list_detail.append(v)
-                            # else:
-                            #     print(f'fundInvestType:"{MS_SECID}"在white_v6中缺少fundInvestType')
-                            #     xml_list_detail.append("white_v6中缺少fundInvestType")
-
-                    # # 最大一年回撤
-                    # maxDrawdownM12 = selector.xpath(
-                    #     f"/FundShareClass/ClassPerformance/Performance/TrailingPerformance[@Type='1000']/RiskAndRating/RiskAnalysis/RiskMeasures/RiskMeasuresDetail[@TimePeriod='M12' and @Type='61']/MaximumDrawdown")
-                    # if maxDrawdownM12:
-                    #     print(f"maxDrawdownM12:", maxDrawdownM12[0].text)
-                    #     xml_list_detail.append(str(round(float(maxDrawdownM12[0].text) / 100, 4)))
-                    # else:
-                    #     print(f"maxDrawdownM12: 数据缺失")
-                    #     xml_list_detail.append("maxDrawdownM12: N/A")
-
-
-                    #
                     if xml_list_detail:
                         xml_list_detail.sort()
                         xml_list.append(xml_list_detail)
@@ -1308,6 +1288,64 @@ class Comparexml:
         return xml_list
 
 
+    def read_distribution_csv(self):
+        distribution_csv_dic = {}
+        with open(self.distribution_filepath, 'r', encoding='utf-8') as f:
+            reader = csv.reader(f)
+            i = 0
+            for row in reader:
+                if i == 0:
+                    pass
+                else:
+                    row = row[0:5]
+                    reportDate = row[-1]  # 读取csv中的日期
+                    if "/" in reportDate:
+                        csv_reportDate = reportDate.split("/")  # csv中，年月日，根据"/"切割
+                        reportDate = self.date_conversion(csv_reportDate)  # 把切割后的列表传进日期转换的方法date_conversion()
+                    if "-" in reportDate: # 同理，月份1~9加0，日期1~9加0
+                        csv_reportDate = reportDate.split("-")
+                        reportDate = self.date_conversion(csv_reportDate)
+                    row[-1] = reportDate
+
+                    row.sort()
+                    distribution_csv_dic[f"第{i}行"] = row
+                i += 1
+            print(distribution_csv_dic)
+            return distribution_csv_dic
+
+
+    def compare_distribution(self):
+        '''
+        比较 distribution.csv文件
+        '''
+        times = self.get_time()
+        print('\n>>>>>>>>>>正在比较distribution.csv文件>>>>>>>>>>')
+        distribution_list = self.xml_distribution()
+        # print(distribution_list)
+        print(f"ms数据量：",len(distribution_list))
+        csv_data = self.read_distribution_csv()
+        # print(csv_data)
+        print(f"distribution.csv数据量：",len(csv_data))
+
+        if len(distribution_list) == len(csv_data):
+            j = 0
+            for k, v in csv_data.items():
+                i = 0
+                for cm in distribution_list:
+                    if operator.eq(cm, v):
+                        i += 1
+                        j += 1
+                    else:
+                        pass
+                # i += 1 # 打印相同数据
+                if i != 1:# 数据相同，i计数+1,即相同的数据不写入txt
+                    self.write_compare_data('result_distribution.txt', k, times)
+                    print(f'数据不一致：',k)
+            if j == len(distribution_list):# 数据比对相同时，j的计数+1，相同数=总数，数据一致。
+                print('\ndistribution.csv >>>校验通过，数据一致!')
+        else:
+            print('数据量不一致')
+            self.write_compare_data('result_manager.txt', '数据量不一致', times)
 
 if __name__ == '__main__':
     c = Comparexml()
@@ -1343,8 +1381,15 @@ if __name__ == '__main__':
     # 校验basicInfo.csv内容
     # c.compare_basicInfo()
 
+    # 获取xml_distribution数据
+    # c.xml_distribution()
 
-    c.xml_distribution()
+    # 读取distribution.csv内容
+    # c.read_distribution_csv()
+
+    # 校验distribution.csv内容
+    c.compare_distribution()
+
 
     endtime = datetime.now()
     print("\nRunTime: {}h-{}m-{}s".format(endtime.hour-starttime.hour, endtime.minute-starttime.minute, endtime.second-starttime.second))
