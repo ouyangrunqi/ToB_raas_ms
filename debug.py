@@ -475,9 +475,9 @@ class Comparexml:
             white_list = []
             for j in range(colNum):
                 white_list.append(Data_sheet.cell_value(i, j))
-            region_dic[white_list[-4]] = white_list[-1]
-            fundIndustry_dic[white_list[-4]] = white_list[-2]
-            fundInvestType_dic[white_list[-4]] = white_list[-3]
+            region_dic[white_list[4]] = white_list[-1]
+            fundIndustry_dic[white_list[4]] = white_list[-2]
+            fundInvestType_dic[white_list[4]] = white_list[-3]
 
         # print(f'基金类型_基金分类白名单: \n\t{fundInvestType_dic}')
         # print(f'地区分类_基金分类白名单: \n\t{region_dic}')
@@ -1038,7 +1038,7 @@ class Comparexml:
                     selector = etree.XML(data.content)
                     xml_list_detail = []
 
-                    ID = f'{MS_SECID}'
+                    ID = f'{ISIN}'
                     distType = ["100", "200", "300"] # 100-地区分布  200-行业分布  300-资产类型分布
                     for d in distType:
 
