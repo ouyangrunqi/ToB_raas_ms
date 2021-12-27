@@ -10,6 +10,7 @@ import operator
 import os
 from datetime import datetime
 import xlrd
+from decimal import Decimal
 
 starttime = datetime.now()
 print(starttime)
@@ -1066,7 +1067,7 @@ class Comparexml:
                             if ID in dict3:
                                 for k, v in dict3.items():
                                     if k == ID:
-                                        if v == "1":  # 股票型
+                                        if v == "1" or v == "4":  # 股票型 or 混合型
                                             for i in range(1,17):
                                                 distKey = selector.xpath(
                                                     f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioBreakdown[@_SalePosition='L']/RegionalExposure/BreakdownValue[@Type={i}]")
@@ -1079,7 +1080,7 @@ class Comparexml:
                                                         print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
                                                         x.append(f"{d}")
                                                         x.append(f'{i}')
-                                                        x.append(str(round(float(distKey[0].text) / 100, 6)))
+                                                        x.append(str(Decimal(str(float(key1))).quantize(Decimal('0.0000'), rounding='ROUND_HALF_UP') / 100).rstrip("0"))
                                                         x.append(ISIN)
                                                         x.append(reportDate[0].text)
                                                         x.sort()
@@ -1087,10 +1088,10 @@ class Comparexml:
                                                     else:
                                                         print(f"distType={d}---@Type={i}---distKey: 0")
 
-                                        if v == "2":  # 债券型
+                                        if v == "2" or v == "3":  # 债券型 or 货币型
                                             for i in range(1, 17):
                                                 distKey = selector.xpath(
-                                                    f"//BondRegionalExposure/BreakdownValue[@Type={i}]")
+                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioBreakdown[@_SalePosition='L']/BondRegionalExposure/BreakdownValue[@Type={i}]")
                                                 reportDate = selector.xpath(
                                                     f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
                                                 if distKey:
@@ -1100,49 +1101,7 @@ class Comparexml:
                                                         print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
                                                         x.append(f"{d}")
                                                         x.append(f'{i}')
-                                                        x.append(str(round(float(distKey[0].text) / 100, 6)))
-                                                        x.append(ISIN)
-                                                        x.append(reportDate[0].text)
-                                                        x.sort()
-                                                        xml_list_detail.append(x)
-                                                    else:
-                                                        print(f"distType={d}---@Type={i}---distKey: 0")
-
-                                        if v == "3":  # 货币型
-                                            for i in range(1, 17):
-                                                distKey = selector.xpath(
-                                                    f"//BondRegionalExposure/BreakdownValue[@Type={i}]")
-                                                reportDate = selector.xpath(
-                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
-                                                if distKey:
-                                                    key1 = distKey[0].text
-                                                    x = []
-                                                    if key1 != "0":
-                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
-                                                        x.append(f"{d}")
-                                                        x.append(f'{i}')
-                                                        x.append(str(round(float(distKey[0].text) / 100, 6)))
-                                                        x.append(ISIN)
-                                                        x.append(reportDate[0].text)
-                                                        x.sort()
-                                                        xml_list_detail.append(x)
-                                                    else:
-                                                        print(f"distType={d}---@Type={i}---distKey: 0")
-
-                                        if v == "4":  # 混合型
-                                            for i in range(1, 17):
-                                                distKey = selector.xpath(
-                                                    f"//RegionalExposure/BreakdownValue[@Type={i}]")
-                                                reportDate = selector.xpath(
-                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
-                                                if distKey:
-                                                    key1 = distKey[0].text
-                                                    x = []
-                                                    if key1 != "0":
-                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
-                                                        x.append(f"{d}")
-                                                        x.append(f'{i}')
-                                                        x.append(str(round(float(distKey[0].text) / 100, 6)))
+                                                        x.append(str(Decimal(str(float(key1))).quantize(Decimal('0.0000'), rounding='ROUND_HALF_UP') / 100).rstrip("0"))
                                                         x.append(ISIN)
                                                         x.append(reportDate[0].text)
                                                         x.sort()
@@ -1171,7 +1130,7 @@ class Comparexml:
                             if ID in dict3:
                                 for k, v in dict3.items():
                                     if k == ID:
-                                        if v == "1":  # 股票型
+                                        if v == "1" or v == "4":  # 股票型 or 混合型
                                             industry_list = [101, 102, 103, 104, 205, 206, 207, 308, 309, 310, 311]
                                             for i in industry_list:
                                                 distKey = selector.xpath(
@@ -1185,7 +1144,7 @@ class Comparexml:
                                                         print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
                                                         x.append(f"{d}")
                                                         x.append(f'{i}')
-                                                        x.append(str(round(float(distKey[0].text) / 100, 6)))
+                                                        x.append(str(Decimal(str(float(key1))).quantize(Decimal('0.0000'), rounding='ROUND_HALF_UP') / 100).rstrip("0"))
                                                         x.append(ISIN)
                                                         x.append(reportDate[0].text)
                                                         x.sort()
@@ -1198,28 +1157,6 @@ class Comparexml:
 
                                         if v == "3":  # 货币型
                                             pass
-
-                                        if v == "4":  # 混合型
-                                            industry_list = [101, 102, 103, 104, 205, 206, 207, 308, 309, 310, 311]
-                                            for i in industry_list:
-                                                distKey = selector.xpath(
-                                                    f"//GlobalStockSectorBreakdown/BreakdownValue[@Type={i}]")
-                                                reportDate = selector.xpath(
-                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
-                                                if distKey:
-                                                    key1 = distKey[0].text
-                                                    x = []
-                                                    if key1 != "0":
-                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
-                                                        x.append(f"{d}")
-                                                        x.append(f'{i}')
-                                                        x.append(str(round(float(distKey[0].text) / 100, 6)))
-                                                        x.append(ISIN)
-                                                        x.append(reportDate[0].text)
-                                                        x.sort()
-                                                        xml_list_detail.append(x)
-                                                    else:
-                                                        print(f"distType={d}---@Type={i}---distKey: 0")
 
                                         if v == "8":  # 另类投资型
                                             pass
@@ -1257,7 +1194,7 @@ class Comparexml:
                                                                 print(f"distType={d}---@Type={i}---distKey:", key)
                                                                 x.append(f"{d}")
                                                                 x.append(f'{i}')
-                                                                x.append(str(round(key / 100, 6)))
+                                                                x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
                                                                 x.append(ISIN)
                                                                 x.append(reportDate[0].text)
                                                                 x.sort()
@@ -1271,7 +1208,7 @@ class Comparexml:
                                                                 print(f"distType={d}---@Type={i}---distKey:", key)
                                                                 x.append(f"{d}")
                                                                 x.append(f'{i}')
-                                                                x.append(str(round(key / 100, 6)))
+                                                                x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
                                                                 x.append(ISIN)
                                                                 x.append(reportDate[0].text)
                                                                 x.sort()
@@ -1308,7 +1245,7 @@ class Comparexml:
                                                                 print(f"distType={d}---@Type={i}---distKey:", key)
                                                                 x.append(f"{d}")
                                                                 x.append(f'{i}')
-                                                                x.append(str(round(key / 100, 6)))
+                                                                x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
                                                                 x.append(ISIN)
                                                                 x.append(reportDate[0].text)
                                                                 x.sort()
@@ -1322,7 +1259,7 @@ class Comparexml:
                                                                 print(f"distType={d}---@Type={i}---distKey:", key)
                                                                 x.append(f"{d}")
                                                                 x.append(f'{i}')
-                                                                x.append(str(round(key / 100, 6)))
+                                                                x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
                                                                 x.append(ISIN)
                                                                 x.append(reportDate[0].text)
                                                                 x.sort()
