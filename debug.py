@@ -1028,7 +1028,7 @@ class Comparexml:
 
             url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
 
-            res = requests.get(url)
+            res = requests.get(url, headers=self.headers)
 
             if res.status_code == 200:
                 print(f">>>>>>>>>>开始获取'{MS_SECID}'的数据>>>>>>>>>>")
