@@ -1229,7 +1229,7 @@ class Comparexml:
                             if ID in dict3:
                                 for k, v in dict3.items():
                                     if k == ID:
-                                        if v == "2":  # 债券型
+                                        if v == "2" or v == "3":  # 债券型 or 货币型
                                             """                      
                                                 10 Government---政府债券
                                                 20 Municipal---市政债券
@@ -1239,24 +1239,45 @@ class Comparexml:
                                                 60 Derivative---衍生品
                                             """
                                             for i in range(10, 70, 10):
-                                                distKey = selector.xpath(
-                                                    f'//GlobalBondSector/GlobalBondSectorBreakdown[@Level="1"]/BreakdownValue[@Type={i}]')
+                                                distKey_L = selector.xpath(
+                                                    f'/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioBreakdown[@_SalePosition="L"]/GlobalBondSector/GlobalBondSectorBreakdown[@Level="1"]/BreakdownValue[@Type={i}]')
+                                                distKey_S = selector.xpath(
+                                                    f'/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioBreakdown[@_SalePosition="S"]/GlobalBondSector/GlobalBondSectorBreakdown[@Level="1"]/BreakdownValue[@Type={i}]')
                                                 reportDate = selector.xpath(
                                                     f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
-                                                if distKey:
-                                                    key1 = distKey[0].text
-                                                    x = []
-                                                    if key1 != "0":
-                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
-                                                        x.append(f"{d}")
-                                                        x.append(f'{i}')
-                                                        x.append(str(round(float(distKey[0].text) / 100, 6)))
-                                                        x.append(ISIN)
-                                                        x.append(reportDate[0].text)
-                                                        x.sort()
-                                                        xml_list_detail.append(x)
+
+                                                if distKey_L:
+                                                    if distKey_S:
+                                                        key_L = distKey_L[0].text
+                                                        key_S = distKey_S[0].text
+                                                        key = float(key_L) - float(key_S)
+                                                        x = []
+                                                        if key_L:
+                                                            if key != 0:
+                                                                print(f"distType={d}---@Type={i}---distKey:", key)
+                                                                x.append(f"{d}")
+                                                                x.append(f'{i}')
+                                                                x.append(str(round(key / 100, 6)))
+                                                                x.append(ISIN)
+                                                                x.append(reportDate[0].text)
+                                                                x.sort()
+                                                                xml_list_detail.append(x)
                                                     else:
-                                                        print(f"distType={d}---@Type={i}---distKey: 0")
+                                                        key_L = distKey_L[0].text
+                                                        key = float(key_L)
+                                                        x = []
+                                                        if key_L:
+                                                            if key != 0:
+                                                                print(f"distType={d}---@Type={i}---distKey:", key)
+                                                                x.append(f"{d}")
+                                                                x.append(f'{i}')
+                                                                x.append(str(round(key / 100, 6)))
+                                                                x.append(ISIN)
+                                                                x.append(reportDate[0].text)
+                                                                x.sort()
+                                                                xml_list_detail.append(x)
+                                                else:
+                                                    pass
 
                                         else:
                                             """                      
@@ -1269,24 +1290,71 @@ class Comparexml:
                                             """
                                             AssetType_list = [1, 3, 5, 6, 7, 8]
                                             for i in AssetType_list:
-                                                distKey = selector.xpath(
+                                                distKey_L = selector.xpath(
                                                     f'/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioBreakdown [@_SalePosition="L"]/AssetAllocation/BreakdownValue[@Type={i}]')
+                                                distKey_S = selector.xpath(
+                                                    f'/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioBreakdown [@_SalePosition="S"]/AssetAllocation/BreakdownValue[@Type={i}]')
                                                 reportDate = selector.xpath(
                                                     f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
-                                                if distKey:
-                                                    key1 = distKey[0].text
-                                                    x = []
-                                                    if key1 != "0":
-                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
-                                                        x.append(f"{d}")
-                                                        x.append(f'{i}')
-                                                        x.append(str(round(float(distKey[0].text) / 100, 6)))
-                                                        x.append(ISIN)
-                                                        x.append(reportDate[0].text)
-                                                        x.sort()
-                                                        xml_list_detail.append(x)
+
+                                                if distKey_L:
+                                                    if distKey_S:
+                                                        key_L = distKey_L[0].text
+                                                        key_S = distKey_S[0].text
+                                                        key = float(key_L) - float(key_S)
+                                                        x = []
+                                                        if key_L:
+                                                            if key != 0:
+                                                                print(f"distType={d}---@Type={i}---distKey:", key)
+                                                                x.append(f"{d}")
+                                                                x.append(f'{i}')
+                                                                x.append(str(round(key / 100, 6)))
+                                                                x.append(ISIN)
+                                                                x.append(reportDate[0].text)
+                                                                x.sort()
+                                                                xml_list_detail.append(x)
                                                     else:
-                                                        print(f"distType={d}---@Type={i}---distKey: 0")
+                                                        key_L = distKey_L[0].text
+                                                        key = float(key_L)
+                                                        x = []
+                                                        if key_L:
+                                                            if key != 0:
+                                                                print(f"distType={d}---@Type={i}---distKey:", key)
+                                                                x.append(f"{d}")
+                                                                x.append(f'{i}')
+                                                                x.append(str(round(key / 100, 6)))
+                                                                x.append(ISIN)
+                                                                x.append(reportDate[0].text)
+                                                                x.sort()
+                                                                xml_list_detail.append(x)
+                                                else:
+                                                    pass
+
+                                                # if distKey_L:
+                                                #     if distKey_S:
+                                                #         x = []
+                                                #         if key != "0":
+                                                #             print(f"distType={d}---@Type={i}---distKey:", key)
+                                                #             x.append(f"{d}")
+                                                #             x.append(f'{i}')
+                                                #             x.append(str(round(key/100, 6)))
+                                                #             x.append(ISIN)
+                                                #             x.append(reportDate[0].text)
+                                                #             x.sort()
+                                                #             xml_list_detail.append(x)
+                                                #     else:
+                                                #         x = []
+                                                #         if key != "0":
+                                                #             print(f"distType={d}---@Type={i}---distKey:", key)
+                                                #             x.append(f"{d}")
+                                                #             x.append(f'{i}')
+                                                #             x.append(str(round(float(key) / 100, 6)))
+                                                #             x.append(ISIN)
+                                                #             x.append(reportDate[0].text)
+                                                #             x.sort()
+                                                #             xml_list_detail.append(x)
+                                                # else:
+                                                #     print(f"distType={d}---@Type={i}---distKey: 0")
 
                     if xml_list_detail:
                         # xml_list_detail.sort()
