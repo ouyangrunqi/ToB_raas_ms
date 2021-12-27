@@ -1361,6 +1361,44 @@ class Comparexml:
             print('数据量不一致')
             self.write_compare_data('result_manager.txt', '数据量不一致', times)
 
+    def xml_market(self):
+        xml_list = []
+        PerformanceId_list = []
+        id_list = self.get_white()
+        for m in id_list:
+            m = m.split('==')
+            ISIN = m[0]
+            MS_SECID = m[1]
+
+            url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
+
+            # url2 = f'https://edw.morningstar.com/HistoryData/HistoryData.aspx?ClientId=magnumhk&DataType=Price&PerformanceId={PerformanceId}&StartDate=2021-05-10&EndDate=2021-05-17&Obsolete=1'
+            res = requests.get(url, headers=self.headers)
+
+            data = requests.get(url=url, headers=self.headers)
+            selector = etree.XML(data.content)
+
+
+
+            if res.status_code == 200:
+                print(f">>>>>>>>>>开始获取'{MS_SECID}'的数据>>>>>>>>>>")
+                xml_market = res.text
+                if xml_market:
+                    xml_PerformanceId = selector.xpath(f"/FundShareClass/PerformanceId/Result/PerformanceId")
+                    if xml_PerformanceId:
+                        PerformanceId = xml_PerformanceId[0].text
+                        PerformanceId_list.append(PerformanceId)
+                        print(PerformanceId_list)
+
+
+                    # if xml_list_detail:
+                    #     # xml_list_detail.sort()
+                    #     for x in xml_list_detail:
+                    #         xml_list.append(x)
+                    #         xml_list.sort()
+            # print(xml_list)
+        # return xml_list
+
 if __name__ == '__main__':
     c = Comparexml()
 
@@ -1402,7 +1440,17 @@ if __name__ == '__main__':
     # c.read_distribution_csv()
 
     # 校验distribution.csv内容
-    c.compare_distribution()
+    # c.compare_distribution()
+
+
+    # 获取xml_market数据
+    c.xml_market()
+
+    # 读取market.csv内容
+    # c.read_market_csv()
+
+    # 校验market.csv内容
+    # c.compare_market()
 
 
     endtime = datetime.now()
