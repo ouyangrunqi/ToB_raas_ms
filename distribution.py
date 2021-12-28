@@ -478,7 +478,7 @@ class Comparexml:
                 print('\ndistribution.csv >>>校验通过，数据一致!')
         else:
             print('数据量不一致')
-            self.write_compare_data('result_manager.txt', '数据量不一致', times)
+            self.write_compare_data('result_distribution.txt', '数据量不一致', times)
 
 if __name__ == '__main__':
     c = Comparexml()

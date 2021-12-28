@@ -12,6 +12,7 @@ from datetime import datetime
 import xlrd
 from decimal import Decimal
 
+
 starttime = datetime.now()
 print(starttime)
 
@@ -1361,8 +1362,9 @@ class Comparexml:
             print('数据量不一致')
             self.write_compare_data('result_manager.txt', '数据量不一致', times)
 
-    def xml_market(self):
-        xml_list = []
+
+    def get_PerformanceId(self):
+
         PerformanceId_list = []
         id_list = self.get_white()
         for m in id_list:
@@ -1371,14 +1373,9 @@ class Comparexml:
             MS_SECID = m[1]
 
             url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
-
-            # url2 = f'https://edw.morningstar.com/HistoryData/HistoryData.aspx?ClientId=magnumhk&DataType=Price&PerformanceId={PerformanceId}&StartDate=2021-05-10&EndDate=2021-05-17&Obsolete=1'
             res = requests.get(url, headers=self.headers)
-
             data = requests.get(url=url, headers=self.headers)
             selector = etree.XML(data.content)
-
-
 
             if res.status_code == 200:
                 print(f">>>>>>>>>>开始获取'{MS_SECID}'的数据>>>>>>>>>>")
@@ -1388,14 +1385,85 @@ class Comparexml:
                     if xml_PerformanceId:
                         PerformanceId = xml_PerformanceId[0].text
                         PerformanceId_list.append(PerformanceId)
-                        print(PerformanceId_list)
+        # print(PerformanceId_list)
+        return PerformanceId_list
 
 
-                    # if xml_list_detail:
-                    #     # xml_list_detail.sort()
-                    #     for x in xml_list_detail:
-                    #         xml_list.append(x)
-                    #         xml_list.sort()
+
+    def xml_market(self):
+        xml_list = []
+        PerformanceId_list = []
+        id_list = self.get_white()
+        for m in id_list:
+            m = m.split('==')
+            ISIN = m[0]
+            MS_SECID = m[1]
+
+            # url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
+            # res = requests.get(url, headers=self.headers)
+            # data = requests.get(url=url, headers=self.headers)
+            # selector = etree.XML(data.content)
+
+        pid = self.get_PerformanceId()
+        for id in pid:
+            nav_list = []
+            fqnav_list = []
+            nav_data_list = []
+
+            curr_time = datetime.now()
+            EndDate = curr_time.strftime("%Y-%m-%d")
+
+            url2 = f"https://edw.morningstar.com/HistoryData/HistoryData.aspx?ClientId=magnumhk&DataType=Price&PerformanceId={id}&StartDate=2021-12-20&EndDate={EndDate}&Obsolete=1"
+            url3 = f"https://edw.morningstar.com/HistoryData/HistoryData.aspx?ClientId=magnumhk&DataType=Rips&PerformanceId={id}&StartDate=2021-12-20&EndDate={EndDate}&Obsolete=1&from=from_parent_mindnote"
+
+            res2 = requests.get(url=url2, headers=self.headers)
+            res3 = requests.get(url=url3, headers=self.headers)
+
+            nav_detail = res2.text
+            fqnav_detail = res3.text
+
+            nav_data = nav_detail.split("\r\n")[1]
+
+            y = nav_data.split(";")
+            nav_Date = y[2]
+            CurrencyISO = y[3]
+            PreTaxNav = y[4].rstrip("0")
+
+            nav_data_list.append(nav_Date)
+            nav_data_list.append(CurrencyISO)
+            nav_data_list.append(PreTaxNav)
+            nav_data_list.append(ISIN)
+            nav_data_list.sort()
+
+
+            xml_list.append(nav_data_list)
+        print(xml_list)
+
+                # for fq in fqnav_list:
+                #     fq = fq.split("\r\n")
+                #     fqnav_header = fq[0]
+                #     fqnav_data = fq[1]
+                #     # print(fqnav_header)
+                #     # print(fqnav_data)
+                #     fqnav_data_detail = fqnav_data.split(";")
+                #
+                #
+                #     fqnav_Date = fqnav_data_detail[2]
+                #     Unit_BAS = fqnav_data_detail[4].rstrip("0")
+                #     # print(fqnav_Date)
+                #     # print(Unit_BAS)
+                #     if fqnav_Date == nav_Date:
+                #         # nav_data_list.append(fqnav_Date)
+                #         nav_data_list.append(Unit_BAS)
+                #         nav_data_list.sort()
+                #     else:
+                #         nav_data_list.append(f"{pid}的nav与fqnav最新日期不一致,fqnav:{fqnav_Date},nav:{nav_Date}")
+                #
+                # xml_list.append(nav_data_list)
+
+        # print(xml_list)
+
+        # print(PerformanceId_list)
             # print(xml_list)
         # return xml_list
 
@@ -1442,6 +1510,8 @@ if __name__ == '__main__':
     # 校验distribution.csv内容
     # c.compare_distribution()
 
+    # 获取PerformanceId
+    # c.get_PerformanceId()
 
     # 获取xml_market数据
     c.xml_market()
