@@ -24,6 +24,7 @@ class Comparexml:
         self.holdingcsv_filepath = r'D:\ms\holding_debug.csv'
         self.basciInfo_filepath = r'D:\ms\basicInfo_debug.csv'
         self.distribution_filepath = r'D:\ms\distribution_debug.csv'
+        self.market_filepath = r'D:\ms\market_1640658199001.csv'
         self.white_filepath = r'D:\ms\white_v6.xlsx'
 
 
@@ -1425,11 +1426,12 @@ class Comparexml:
                 fqnav_detail = res3.text
 
                 nav_data = nav_detail.split("\r\n")[1]
-
                 y = nav_data.split(";")
                 nav_Date = y[2]
                 CurrencyISO = y[3]
-                PreTaxNav = y[4].rstrip("0")
+                # PreTaxNav = y[4]
+                PreTaxNav = str(Decimal(y[4]).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP'))
+
 
                 nav_data_list.append(nav_Date)
                 nav_data_list.append(CurrencyISO)
@@ -1438,36 +1440,88 @@ class Comparexml:
                 nav_data_list.sort()
                 # print(nav_data_list)
 
+
+                fqnav_data = fqnav_detail.split("\r\n")[1]
+                yy = fqnav_data.split(";")
+                fqnav_Date = yy[2]
+                # Unit_BAS = yy[4]
+                Unit_BAS = str(Decimal(yy[4]).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP'))
+
+
+
+                # nav_data_list.append(fqnav_Date)
+                # nav_data_list.append(Unit_BAS)
+                # nav_data_list.sort()
+
+                if fqnav_Date == nav_Date:
+                    # nav_data_list.append(fqnav_Date)
+                    nav_data_list.append(Unit_BAS)
+                    nav_data_list.sort()
+                else:
+                    nav_data_list.append(f"{pid}的nav与fqnav最新日期不一致:\nfqnav:{fqnav_Date},\nnav:{nav_Date}")
+
             xml_list.append(nav_data_list)
         print(xml_list)
 
-                # for fq in fqnav_list:
-                #     fq = fq.split("\r\n")
-                #     fqnav_header = fq[0]
-                #     fqnav_data = fq[1]
-                #     # print(fqnav_header)
-                #     # print(fqnav_data)
-                #     fqnav_data_detail = fqnav_data.split(";")
-                #
-                #
-                #     fqnav_Date = fqnav_data_detail[2]
-                #     Unit_BAS = fqnav_data_detail[4].rstrip("0")
-                #     # print(fqnav_Date)
-                #     # print(Unit_BAS)
-                #     if fqnav_Date == nav_Date:
-                #         # nav_data_list.append(fqnav_Date)
-                #         nav_data_list.append(Unit_BAS)
-                #         nav_data_list.sort()
-                #     else:
-                #         nav_data_list.append(f"{pid}的nav与fqnav最新日期不一致,fqnav:{fqnav_Date},nav:{nav_Date}")
-                #
-                # xml_list.append(nav_data_list)
+    def read_market_csv(self):
+        market_csv_dic = {}
+        with open(self.market_filepath, 'r', encoding='utf-8') as f:
+            reader = csv.reader(f)
+            i = 0
+            for row in reader:
+                if i == 0:
+                    pass
+                else:
+                    row = row[0:4]
+                    reportDate = row[-1]  # 读取csv中的日期
+                    if "/" in reportDate:
+                        csv_reportDate = reportDate.split("/")  # csv中，年月日，根据"/"切割
+                        reportDate = self.date_conversion(csv_reportDate)  # 把切割后的列表传进日期转换的方法date_conversion()
+                    if "-" in reportDate:  # 同理，月份1~9加0，日期1~9加0
+                        csv_reportDate = reportDate.split("-")
+                        reportDate = self.date_conversion(csv_reportDate)
+                    row[-1] = reportDate
 
-        # print(xml_list)
+                    row.sort()
+                    market_csv_dic[f"第{i}行"] = row
+                i += 1
+            print(market_csv_dic)
+            return market_csv_dic
 
-        # print(PerformanceId_list)
-            # print(xml_list)
-        # return xml_list
+
+    def compare_market(self):
+        '''
+        比较 market.csv文件
+        '''
+        times = self.get_time()
+        print('\n>>>>>>>>>>正在比较market.csv文件>>>>>>>>>>')
+        market_list = self.xml_market()
+        # print(market_list)
+        print(f"ms数据量：",len(market_list))
+        csv_data = self.read_market_csv()
+        # print(csv_data)
+        print(f"market.csv数据量：",len(csv_data))
+
+        if len(market_list) == len(csv_data):
+            j = 0
+            for k, v in csv_data.items():
+                i = 0
+                for cm in market_list:
+                    if operator.eq(cm, v):
+                        i += 1
+                        j += 1
+                    else:
+                        pass
+                # i += 1 # 打印相同数据
+                if i != 1:# 数据相同，i计数+1,即相同的数据不写入txt
+                    self.write_compare_data('result_market.txt', k, times)
+                    print(f'数据不一致：',k)
+            if j == len(market_list):# 数据比对相同时，j的计数+1，相同数=总数，数据一致。
+                print('\nmarket.csv >>>校验通过，数据一致!')
+        else:
+            print('数据量不一致')
+            self.write_compare_data('result_manager.txt', '数据量不一致', times)
+
 
 if __name__ == '__main__':
     c = Comparexml()
