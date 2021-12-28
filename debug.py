@@ -1378,14 +1378,16 @@ class Comparexml:
             selector = etree.XML(data.content)
 
             if res.status_code == 200:
-                print(f">>>>>>>>>>开始获取'{MS_SECID}'的数据>>>>>>>>>>")
+                print(f">>>>>>>>>>开始获取'{MS_SECID}'的PerformanceId>>>>>>>>>>")
                 xml_market = res.text
                 if xml_market:
                     xml_PerformanceId = selector.xpath(f"/FundShareClass/PerformanceId/Result/PerformanceId")
                     if xml_PerformanceId:
                         PerformanceId = xml_PerformanceId[0].text
                         PerformanceId_list.append(PerformanceId)
-        # print(PerformanceId_list)
+                        print(PerformanceId)
+
+        print(PerformanceId_list)
         return PerformanceId_list
 
 
@@ -1394,6 +1396,7 @@ class Comparexml:
         xml_list = []
         PerformanceId_list = []
         id_list = self.get_white()
+        pid = self.get_PerformanceId()
         for m in id_list:
             m = m.split('==')
             ISIN = m[0]
@@ -1404,37 +1407,36 @@ class Comparexml:
             # data = requests.get(url=url, headers=self.headers)
             # selector = etree.XML(data.content)
 
-        pid = self.get_PerformanceId()
-        for id in pid:
-            nav_list = []
-            fqnav_list = []
-            nav_data_list = []
+            for id in pid:
+                nav_list = []
+                fqnav_list = []
+                nav_data_list = []
 
-            curr_time = datetime.now()
-            EndDate = curr_time.strftime("%Y-%m-%d")
+                curr_time = datetime.now()
+                EndDate = curr_time.strftime("%Y-%m-%d")
 
-            url2 = f"https://edw.morningstar.com/HistoryData/HistoryData.aspx?ClientId=magnumhk&DataType=Price&PerformanceId={id}&StartDate=2021-12-20&EndDate={EndDate}&Obsolete=1"
-            url3 = f"https://edw.morningstar.com/HistoryData/HistoryData.aspx?ClientId=magnumhk&DataType=Rips&PerformanceId={id}&StartDate=2021-12-20&EndDate={EndDate}&Obsolete=1&from=from_parent_mindnote"
+                url2 = f"https://edw.morningstar.com/HistoryData/HistoryData.aspx?ClientId=magnumhk&DataType=Price&PerformanceId={id}&StartDate=2021-12-20&EndDate={EndDate}&Obsolete=1"
+                url3 = f"https://edw.morningstar.com/HistoryData/HistoryData.aspx?ClientId=magnumhk&DataType=Rips&PerformanceId={id}&StartDate=2021-12-20&EndDate={EndDate}&Obsolete=1&from=from_parent_mindnote"
 
-            res2 = requests.get(url=url2, headers=self.headers)
-            res3 = requests.get(url=url3, headers=self.headers)
+                res2 = requests.get(url=url2, headers=self.headers)
+                res3 = requests.get(url=url3, headers=self.headers)
 
-            nav_detail = res2.text
-            fqnav_detail = res3.text
+                nav_detail = res2.text
+                fqnav_detail = res3.text
 
-            nav_data = nav_detail.split("\r\n")[1]
+                nav_data = nav_detail.split("\r\n")[1]
 
-            y = nav_data.split(";")
-            nav_Date = y[2]
-            CurrencyISO = y[3]
-            PreTaxNav = y[4].rstrip("0")
+                y = nav_data.split(";")
+                nav_Date = y[2]
+                CurrencyISO = y[3]
+                PreTaxNav = y[4].rstrip("0")
 
-            nav_data_list.append(nav_Date)
-            nav_data_list.append(CurrencyISO)
-            nav_data_list.append(PreTaxNav)
-            nav_data_list.append(ISIN)
-            nav_data_list.sort()
-
+                nav_data_list.append(nav_Date)
+                nav_data_list.append(CurrencyISO)
+                nav_data_list.append(PreTaxNav)
+                nav_data_list.append(ISIN)
+                nav_data_list.sort()
+                # print(nav_data_list)
 
             xml_list.append(nav_data_list)
         print(xml_list)
