@@ -1377,7 +1377,7 @@ class Comparexml:
             res = requests.get(url=url, headers=self.headers)
             data = requests.get(url=url, headers=self.headers)
             selector = etree.XML(data.content)
-
+            pid_dict = {}
             if res.status_code == 200:
                 print(f">>>>>>>>>>开始获取'{MS_SECID}'的PerformanceId>>>>>>>>>>")
                 xml_market = res.text
@@ -1385,8 +1385,10 @@ class Comparexml:
                     xml_PerformanceId = selector.xpath(f"/FundShareClass/PerformanceId/Result/PerformanceId")
                     if xml_PerformanceId:
                         PerformanceId = xml_PerformanceId[0].text
-                        PerformanceId_list.append(PerformanceId)
-                        print(PerformanceId)
+                        pid_dict[ISIN] = PerformanceId
+                        print(pid_dict)
+                        PerformanceId_list.append(pid_dict)
+
 
         print(PerformanceId_list)
         return PerformanceId_list
@@ -1405,53 +1407,47 @@ class Comparexml:
             MS_SECID = m[1]
 
             x = []
-            for id in pid:
-                nav_list = []
-                fqnav_list = []
-                nav_data_list = []
+            for i in pid:
+                for k, v in i.items():
+                    if k == ISIN:
+                        id = v
+                        nav_list = []
+                        fqnav_list = []
+                        nav_data_list = []
 
-                curr_time = datetime.now()
-                EndDate = curr_time.strftime("%Y-%m-%d")
+                        curr_time = datetime.now()
+                        EndDate = curr_time.strftime("%Y-%m-%d")
 
-                url2 = f"https://edw.morningstar.com/HistoryData/HistoryData.aspx?ClientId=magnumhk&DataType=Price&PerformanceId={id}&StartDate=2021-12-20&EndDate={EndDate}&Obsolete=1"
-                url3 = f"https://edw.morningstar.com/HistoryData/HistoryData.aspx?ClientId=magnumhk&DataType=Rips&PerformanceId={id}&StartDate=2021-12-20&EndDate={EndDate}&Obsolete=1&from=from_parent_mindnote"
+                        url2 = f"https://edw.morningstar.com/HistoryData/HistoryData.aspx?ClientId=magnumhk&DataType=Price&PerformanceId={id}&StartDate=2021-12-20&EndDate={EndDate}&Obsolete=1"
+                        url3 = f"https://edw.morningstar.com/HistoryData/HistoryData.aspx?ClientId=magnumhk&DataType=Rips&PerformanceId={id}&StartDate=2021-12-20&EndDate={EndDate}&Obsolete=1&from=from_parent_mindnote"
 
-                res2 = requests.get(url=url2, headers=self.headers)
-                res3 = requests.get(url=url3, headers=self.headers)
+                        res2 = requests.get(url=url2, headers=self.headers)
+                        res3 = requests.get(url=url3, headers=self.headers)
 
-                nav_detail = res2.text
-                fqnav_detail = res3.text
+                        nav_detail = res2.text
+                        fqnav_detail = res3.text
 
-                nav_data = nav_detail.split("\r\n")[1]
-                y = nav_data.split(";")
-                nav_Date = y[2]
-                CurrencyISO = y[3]
-                PreTaxNav = str(Decimal(y[4]).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP'))
+                        nav_data = nav_detail.split("\r\n")[1]
+                        y = nav_data.split(";")
+                        nav_Date = y[2]
+                        CurrencyISO = y[3]
+                        PreTaxNav = str(Decimal(y[4]).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP'))
 
-                nav_data_list.append(nav_Date)
-                nav_data_list.append(CurrencyISO)
-                nav_data_list.append(PreTaxNav)
-                # nav_data_list.append(ISIN)
-                nav_data_list.sort()
+                        nav_data_list.append(nav_Date)
+                        nav_data_list.append(CurrencyISO)
+                        nav_data_list.append(PreTaxNav)
+                        nav_data_list.sort()
 
-                fqnav_data = fqnav_detail.split("\r\n")[1]
-                yy = fqnav_data.split(";")
-                fqnav_Date = yy[2]
-                # Unit_BAS = yy[4]
-                Unit_BAS = str(Decimal(yy[4]).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP'))
+                        fqnav_data = fqnav_detail.split("\r\n")[1]
+                        yy = fqnav_data.split(";")
+                        fqnav_Date = yy[2]
+                        # Unit_BAS = yy[4]
+                        Unit_BAS = str(Decimal(yy[4]).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP'))
 
-                if fqnav_Date == nav_Date:
-                    # nav_data_list.append(fqnav_Date)
-                    nav_data_list.append(Unit_BAS)
-                    nav_data_list.sort()
-                else:
-                    nav_data_list.append(f"nav与fqnav最新日期不一致:fqnav:{fqnav_Date},nav:{nav_Date}")
-
-                nav_data_list.append(ISIN)
-                print(nav_data_list)
-                x.append(nav_data_list)
-                # x.append(ISIN)
-
+                        nav_data_list.append(Unit_BAS)
+                        nav_data_list.append(ISIN)
+                        print(nav_data_list)
+                        x.append(nav_data_list)
             xml_list.append(x)
 
         print(xml_list)
