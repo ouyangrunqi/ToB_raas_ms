@@ -24,7 +24,7 @@ class Comparexml:
         self.holdingcsv_filepath = r'D:\ms\holding_debug.csv'
         self.basciInfo_filepath = r'D:\ms\basicInfo_debug.csv'
         self.distribution_filepath = r'D:\ms\distribution_debug.csv'
-        self.market_filepath = r'D:\ms\market_1640658199001.csv'
+        self.market_filepath = r'D:\ms\market_debug.csv'
         self.white_filepath = r'D:\ms\white_v6.xlsx'
 
 
@@ -1431,26 +1431,26 @@ class Comparexml:
                         y = nav_data.split(";")
                         nav_Date = y[2]
                         CurrencyISO = y[3]
-                        PreTaxNav = str(Decimal(y[4]).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP'))
+                        PreTaxNav = str(Decimal(y[4]).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP')).rstrip("0")
 
                         nav_data_list.append(nav_Date)
                         nav_data_list.append(CurrencyISO)
                         nav_data_list.append(PreTaxNav)
-                        nav_data_list.sort()
 
                         fqnav_data = fqnav_detail.split("\r\n")[1]
                         yy = fqnav_data.split(";")
                         fqnav_Date = yy[2]
                         # Unit_BAS = yy[4]
-                        Unit_BAS = str(Decimal(yy[4]).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP'))
+                        Unit_BAS = str(Decimal(yy[4]).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP')).rstrip("0")
 
                         nav_data_list.append(Unit_BAS)
                         nav_data_list.append(ISIN)
-                        print(nav_data_list)
-                        x.append(nav_data_list)
-            xml_list.append(x)
-
+                        nav_data_list.sort()
+                        # print(nav_data_list)
+            xml_list.append(nav_data_list)
+            xml_list.sort()
         print(xml_list)
+        return(xml_list)
 
     def read_market_csv(self):
         market_csv_dic = {}
@@ -1461,7 +1461,7 @@ class Comparexml:
                 if i == 0:
                     pass
                 else:
-                    row = row[0:4]
+                    row = row[0:4] + row[-1:]
                     reportDate = row[-1]  # 读取csv中的日期
                     if "/" in reportDate:
                         csv_reportDate = reportDate.split("/")  # csv中，年月日，根据"/"切割
@@ -1559,13 +1559,13 @@ if __name__ == '__main__':
     # c.get_PerformanceId()
 
     # 获取xml_market数据
-    c.xml_market()
+    # c.xml_market()
 
     # 读取market.csv内容
     # c.read_market_csv()
 
     # 校验market.csv内容
-    # c.compare_market()
+    c.compare_market()
 
 
     endtime = datetime.now()
