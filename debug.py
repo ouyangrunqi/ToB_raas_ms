@@ -1374,7 +1374,7 @@ class Comparexml:
             MS_SECID = m[1]
 
             url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
-            res = requests.get(url, headers=self.headers)
+            res = requests.get(url=url, headers=self.headers)
             data = requests.get(url=url, headers=self.headers)
             selector = etree.XML(data.content)
 
@@ -1395,6 +1395,7 @@ class Comparexml:
 
     def xml_market(self):
         xml_list = []
+        # x = []
         PerformanceId_list = []
         id_list = self.get_white()
         pid = self.get_PerformanceId()
@@ -1408,6 +1409,7 @@ class Comparexml:
             # data = requests.get(url=url, headers=self.headers)
             # selector = etree.XML(data.content)
 
+            x = []
             for id in pid:
                 nav_list = []
                 fqnav_list = []
@@ -1429,17 +1431,14 @@ class Comparexml:
                 y = nav_data.split(";")
                 nav_Date = y[2]
                 CurrencyISO = y[3]
-                # PreTaxNav = y[4]
                 PreTaxNav = str(Decimal(y[4]).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP'))
-
 
                 nav_data_list.append(nav_Date)
                 nav_data_list.append(CurrencyISO)
                 nav_data_list.append(PreTaxNav)
-                nav_data_list.append(ISIN)
+                # nav_data_list.append(ISIN)
                 nav_data_list.sort()
                 # print(nav_data_list)
-
 
                 fqnav_data = fqnav_detail.split("\r\n")[1]
                 yy = fqnav_data.split(";")
@@ -1447,20 +1446,19 @@ class Comparexml:
                 # Unit_BAS = yy[4]
                 Unit_BAS = str(Decimal(yy[4]).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP'))
 
-
-
-                # nav_data_list.append(fqnav_Date)
-                # nav_data_list.append(Unit_BAS)
-                # nav_data_list.sort()
-
                 if fqnav_Date == nav_Date:
                     # nav_data_list.append(fqnav_Date)
                     nav_data_list.append(Unit_BAS)
                     nav_data_list.sort()
                 else:
-                    nav_data_list.append(f"{pid}的nav与fqnav最新日期不一致:\nfqnav:{fqnav_Date},\nnav:{nav_Date}")
+                    nav_data_list.append(f"nav与fqnav最新日期不一致:fqnav:{fqnav_Date},nav:{nav_Date}")
 
-            xml_list.append(nav_data_list)
+                nav_data_list.append(ISIN)
+                x.append(nav_data_list)
+                # x.append(ISIN)
+
+        xml_list.append(x)
+
         print(xml_list)
 
     def read_market_csv(self):
