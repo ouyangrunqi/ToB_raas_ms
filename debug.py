@@ -1404,11 +1404,6 @@ class Comparexml:
             ISIN = m[0]
             MS_SECID = m[1]
 
-            # url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
-            # res = requests.get(url, headers=self.headers)
-            # data = requests.get(url=url, headers=self.headers)
-            # selector = etree.XML(data.content)
-
             x = []
             for id in pid:
                 nav_list = []
@@ -1438,7 +1433,6 @@ class Comparexml:
                 nav_data_list.append(PreTaxNav)
                 # nav_data_list.append(ISIN)
                 nav_data_list.sort()
-                # print(nav_data_list)
 
                 fqnav_data = fqnav_detail.split("\r\n")[1]
                 yy = fqnav_data.split(";")
@@ -1454,10 +1448,11 @@ class Comparexml:
                     nav_data_list.append(f"nav与fqnav最新日期不一致:fqnav:{fqnav_Date},nav:{nav_Date}")
 
                 nav_data_list.append(ISIN)
+                print(nav_data_list)
                 x.append(nav_data_list)
                 # x.append(ISIN)
 
-        xml_list.append(x)
+            xml_list.append(x)
 
         print(xml_list)
 
