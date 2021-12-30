@@ -19,7 +19,7 @@ print(starttime)
 class Comparexml:
     def __init__(self):
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36'}
-        self.basciInfo_filepath = r'D:\ms\basicInfo_1640738403802.csv'
+        self.basciInfo_filepath = r'D:\ms\basicInfo_1640862680009.csv'
         self.white_filepath = r'D:\ms\white_v6.xlsx'
 
 
@@ -28,7 +28,7 @@ class Comparexml:
         获取白名单 ISIN==MS_SECID
         '''
         id = []
-        with open('white_all_162.txt', 'r', encoding='utf-8')as f:
+        with open('white_all_215.txt', 'r', encoding='utf-8')as f:
             for x in f.readlines():
                 id.append(x.replace('\n', ''))
         return id
@@ -81,9 +81,9 @@ class Comparexml:
             white_list = []
             for j in range(colNum):
                 white_list.append(Data_sheet.cell_value(i, j))
-            region_dic[white_list[4]] = white_list[-1]
-            fundIndustry_dic[white_list[4]] = white_list[-2]
-            fundInvestType_dic[white_list[4]] = white_list[-3]
+            region_dic[white_list[1]] = white_list[-1]
+            fundIndustry_dic[white_list[1]] = white_list[-2]
+            fundInvestType_dic[white_list[1]] = white_list[-3]
 
         # print(f'基金类型_基金分类白名单: \n\t{fundInvestType_dic}')
         # print(f'地区分类_基金分类白名单: \n\t{region_dic}')
