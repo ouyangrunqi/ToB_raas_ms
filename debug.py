@@ -478,9 +478,9 @@ class Comparexml:
             white_list = []
             for j in range(colNum):
                 white_list.append(Data_sheet.cell_value(i, j))
-            region_dic[white_list[4]] = white_list[-1]
-            fundIndustry_dic[white_list[4]] = white_list[-2]
-            fundInvestType_dic[white_list[4]] = white_list[-3]
+            region_dic[white_list[1]] = white_list[-1]
+            fundIndustry_dic[white_list[1]] = white_list[-2]
+            fundInvestType_dic[white_list[1]] = white_list[-3]
 
         # print(f'基金类型_基金分类白名单: \n\t{fundInvestType_dic}')
         # print(f'地区分类_基金分类白名单: \n\t{region_dic}')
@@ -873,9 +873,12 @@ class Comparexml:
                         if fundFactSheet_cn:
                             print(f"fundFactSheet_cn:", fundFactSheet_cn[0].text)
                             xml_list_detail.append(fundFactSheet_cn[0].text)
-                        else:
+                        elif fundFactSheet_en:
                             print(f"fundFactSheet_en:", fundFactSheet_en[0].text)
                             xml_list_detail.append(fundFactSheet_en[0].text)
+                        else:
+                            print(f"fundFactSheet: N/A")
+                            xml_list_detail.append("N/A")
 
 
                         # 基金章程

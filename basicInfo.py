@@ -19,7 +19,7 @@ print(starttime)
 class Comparexml:
     def __init__(self):
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36'}
-        self.basciInfo_filepath = r'D:\ms\basicInfo_1640862680009.csv'
+        self.basciInfo_filepath = r'D:\ms\basicInfo_1640911203408.csv'
         self.white_filepath = r'D:\ms\white_v6.xlsx'
 
 
@@ -459,9 +459,12 @@ class Comparexml:
                         if fundFactSheet_cn:
                             print(f"fundFactSheet_cn:", fundFactSheet_cn[0].text)
                             xml_list_detail.append(fundFactSheet_cn[0].text)
-                        else:
+                        elif fundFactSheet_en:
                             print(f"fundFactSheet_en:", fundFactSheet_en[0].text)
                             xml_list_detail.append(fundFactSheet_en[0].text)
+                        else:
+                            print(f"fundFactSheet: N/A")
+                            xml_list_detail.append("N/A")
 
 
                         # 基金章程
