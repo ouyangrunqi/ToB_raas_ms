@@ -19,7 +19,7 @@ print(starttime)
 class Comparexml:
     def __init__(self):
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36'}
-        self.basciInfo_filepath = r'D:\ms\basicInfo_1640911203408.csv'
+        self.basciInfo_filepath = r'D:\ms\basicInfo_1640911206087.csv'
         self.white_filepath = r'D:\ms\white_v6.xlsx'
 
 
@@ -216,7 +216,7 @@ class Comparexml:
                         if xml_MultilingualVariation:
                             xml_LanguageVariation = selector.xpath('//LanguageVariation[@_LanguageId="0L00000082"]/../LanguageVariation')
                             if xml_LanguageVariation:
-                                fundNameSC = selector.xpath(f'//MultilingualVariation[@_Id="{MS_SECID}"]/LanguageVariation [@_LanguageId="0L00000082"]//Name')
+                                fundNameSC = selector.xpath(f'/FundShareClass/Fund/MultilingualVariation/LanguageVariation[@_LanguageId="0L00000082"]/RegionVariation/Name')
                                 print(f"fundNameSC:", fundNameSC[0].text)
                                 xml_list_detail.append(fundNameSC[0].text)
                         baseCurrency = re.findall("<CurrencyId>(.*)</CurrencyId>",basicInfo_PerformanceId)
@@ -475,9 +475,12 @@ class Comparexml:
                         if fundStatement_cn:
                             print(f"fundStatement_cn:", fundStatement_cn[0].text)
                             xml_list_detail.append(fundStatement_cn[0].text)
-                        else:
+                        elif fundStatement_en:
                             print(f"fundStatement_en:", fundStatement_en[0].text)
                             xml_list_detail.append(fundStatement_en[0].text)
+                        else:
+                            print(f"fundStatement: N/A")
+                            xml_list_detail.append("N/A")
 
                         # 年度报告
                         fundAnnualReport_cn = selector2.xpath(
@@ -487,9 +490,12 @@ class Comparexml:
                         if fundAnnualReport_cn:
                             print(f"fundAnnualReport_cn:", fundAnnualReport_cn[0].text)
                             xml_list_detail.append(fundAnnualReport_cn[0].text)
-                        else:
+                        elif fundAnnualReport_en:
                             print(f"fundAnnualReport_en:", fundAnnualReport_en[0].text)
                             xml_list_detail.append(fundAnnualReport_en[0].text)
+                        else:
+                            print(f"fundAnnualReport: N/A")
+                            xml_list_detail.append("N/A")
 
                         # 中期报告
                         fundInterimReport_cn = selector2.xpath(
@@ -499,9 +505,12 @@ class Comparexml:
                         if fundInterimReport_cn:
                             print(f"fundInterimReport_cn:", fundInterimReport_cn[0].text)
                             xml_list_detail.append(fundInterimReport_cn[0].text)
-                        else:
+                        elif fundInterimReport_en:
                             print(f"fundInterimReport_en:", fundInterimReport_en[0].text)
                             xml_list_detail.append(fundInterimReport_en[0].text)
+                        else:
+                            print(f"fundInterimReport: N/A")
+                            xml_list_detail.append("N/A")
 
                         # 基金说明书
                         fundProspectus_cn = selector2.xpath(
@@ -511,9 +520,12 @@ class Comparexml:
                         if fundProspectus_cn:
                             print(f"fundProspectus_cn:", fundProspectus_cn[0].text)
                             xml_list_detail.append(fundProspectus_cn[0].text)
-                        else:
+                        elif fundProspectus_en:
                             print(f"fundProspectus_en:", fundProspectus_en[0].text)
                             xml_list_detail.append(fundProspectus_en[0].text)
+                        else:
+                            print(f"fundProspectus: N/A")
+                            xml_list_detail.append("N/A")
 
                         # 收益率同类表现排名-1M
                         peerGroupRankM1 = selector.xpath(f'/FundShareClass/ClassPerformance/Performance/TrailingPerformance/TrailingReturn/Return[@Type="1"]/ReturnDetail[@TimePeriod="M1"]/PeerGroupRank/PeerGroupRankDetail/PercentileRank')

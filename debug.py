@@ -630,7 +630,7 @@ class Comparexml:
                         if xml_MultilingualVariation:
                             xml_LanguageVariation = selector.xpath('//LanguageVariation[@_LanguageId="0L00000082"]/../LanguageVariation')
                             if xml_LanguageVariation:
-                                fundNameSC = selector.xpath(f'//MultilingualVariation[@_Id="{MS_SECID}"]/LanguageVariation [@_LanguageId="0L00000082"]//Name')
+                                fundNameSC = selector.xpath(f'/FundShareClass/Fund/MultilingualVariation/LanguageVariation[@_LanguageId="0L00000082"]/RegionVariation/Name')
                                 print(f"fundNameSC:", fundNameSC[0].text)
                                 xml_list_detail.append(fundNameSC[0].text)
                         # for Currency in basicInfo_PerformanceId:
