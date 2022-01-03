@@ -216,9 +216,20 @@ class Comparexml:
                         if xml_MultilingualVariation:
                             xml_LanguageVariation = selector.xpath('//LanguageVariation[@_LanguageId="0L00000082"]/../LanguageVariation')
                             if xml_LanguageVariation:
-                                fundNameSC = selector.xpath(f'/FundShareClass/Fund/MultilingualVariation/LanguageVariation[@_LanguageId="0L00000082"]/RegionVariation/Name')
-                                print(f"fundNameSC:", fundNameSC[0].text)
-                                xml_list_detail.append(fundNameSC[0].text)
+                                fundNameSC_1 = selector.xpath(
+                                    f'/FundShareClass/MultilingualVariation/LanguageVariation[@_LanguageId="0L00000082"]/RegionVariation/Name')
+                                fundNameSC_2 = selector.xpath(
+                                    f'/FundShareClass/Fund/MultilingualVariation/LanguageVariation[@_LanguageId="0L00000082"]/RegionVariation/Name')
+                                if fundNameSC_1:
+                                    print(f"fundNameSC:", fundNameSC_1[0].text)
+                                    xml_list_detail.append(fundNameSC_1[0].text)
+                                elif fundNameSC_2:
+                                    print(f"fundNameSC:", fundNameSC_2[0].text)
+                                    xml_list_detail.append(fundNameSC_2[0].text)
+                                else:
+                                    print(f"fundNameSC:无数据")
+                                    xml_list_detail.append("")
+
                         baseCurrency = re.findall("<CurrencyId>(.*)</CurrencyId>",basicInfo_PerformanceId)
                         if baseCurrency:
                             print(f"baseCurrency:", baseCurrency[0])
