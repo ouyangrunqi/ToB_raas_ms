@@ -16,7 +16,7 @@ starttime = datetime.now()
 class Comparexml:
     def __init__(self):
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36'}
-        self.managercsv_filepath = r'D:\ms\manager_1640133606904.csv'
+        self.managercsv_filepath = r'D:\ms\manager_debug.csv'
 
 
     def get_white(self):
@@ -24,7 +24,7 @@ class Comparexml:
         获取白名单 ISIN==MS_SECID
         '''
         id = []
-        with open('white_all_162.txt', 'r', encoding='utf-8')as f:
+        with open('KYG.txt', 'r', encoding='utf-8')as f:
             for x in f.readlines():
                 id.append(x.replace('\n', ''))
         return id
@@ -59,7 +59,7 @@ class Comparexml:
             res = requests.get(url)
 
             if res.status_code == 200:
-                print(f">>>>>>>>>>开始获取{MS_SECID}的数据>>>>>>>>>>")
+                print(f">>>>>>>>>>开始获取'{MS_SECID}'的数据>>>>>>>>>>")
                 xml_managers = res.text
                 xml_manager = re.findall('<ManagerList>(.*?)</ManagerList>', xml_managers, re.S)  # 修饰符re.S  使.匹配包括换行在内的所有字符
                 if xml_manager:
@@ -134,7 +134,7 @@ class Comparexml:
 
     def read_manager_csv(self):
         manager_csv_dic = {}
-        with open(self.managercsv_filepath, 'r', encoding='utf-8') as f:
+        with open(self.managercsv_filepath, 'r') as f:
             reader = csv.reader(f)
             i = 0
             for row in reader:
