@@ -18,7 +18,7 @@ print(starttime)
 class Comparexml:
     def __init__(self):
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36'}
-        self.distribution_filepath = r'D:\ms\distribution_1640479203977.csv'
+        self.distribution_filepath = r'D:\ms\distribution_debug.csv'
         self.white_filepath = r'D:\ms\white_v6.xlsx'
 
 
@@ -27,7 +27,7 @@ class Comparexml:
         获取白名单 ISIN==MS_SECID
         '''
         id = []
-        with open('white_all_162.txt', 'r', encoding='utf-8')as f:
+        with open('IE.txt', 'r', encoding='utf-8')as f:
             for x in f.readlines():
                 id.append(x.replace('\n', ''))
         return id
@@ -93,9 +93,9 @@ class Comparexml:
             white_list = []
             for j in range(colNum):
                 white_list.append(Data_sheet.cell_value(i, j))
-            region_dic[white_list[4]] = white_list[-1]
-            fundIndustry_dic[white_list[4]] = white_list[-2]
-            fundInvestType_dic[white_list[4]] = white_list[-3]
+            region_dic[white_list[1]] = white_list[-1]
+            fundIndustry_dic[white_list[1]] = white_list[-2]
+            fundInvestType_dic[white_list[1]] = white_list[-3]
 
         # 基金类型  1-股票型  2-债券型  3-货币型  4-混合型  8-另类投资型
         for k, v in fundInvestType_dic.items():
@@ -129,7 +129,7 @@ class Comparexml:
             elif region_dic[k] == "其他":
                 region_dic[k] = "0"
             else:
-                region_dic[k] = ""
+                region_dic[k] = "0"
         # print('地区分类_basicinfo:\n\t', region_dic)
         xlsx_list.append(region_dic)
 
@@ -158,7 +158,7 @@ class Comparexml:
             elif fundIndustry_dic[k] == "其他":
                 fundIndustry_dic[k] = "0"
             else:
-                fundIndustry_dic[k] = ""
+                fundIndustry_dic[k] = "0"
         # print('行业分类_basicinfo:\n\t', fundIndustry_dic)
         xlsx_list.append(fundIndustry_dic)
         return xlsx_list
@@ -174,7 +174,7 @@ class Comparexml:
 
             url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
 
-            res = requests.get(url)
+            res = requests.get(url, headers=self.headers)
 
             if res.status_code == 200:
                 print(f">>>>>>>>>>开始获取'{MS_SECID}'的数据>>>>>>>>>>")
@@ -215,45 +215,88 @@ class Comparexml:
                                     if k == ID:
                                         if v == "1" or v == "4":  # 股票型 or 混合型
                                             for i in range(1,17):
-                                                distKey = selector.xpath(
+                                                distKey_L = selector.xpath(
                                                     f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioBreakdown[@_SalePosition='L']/RegionalExposure/BreakdownValue[@Type={i}]")
+                                                distKey_S = selector.xpath(
+                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioBreakdown[@_SalePosition='S']/RegionalExposure/BreakdownValue[@Type={i}]")
                                                 reportDate = selector.xpath(
                                                     f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
-                                                if distKey:
-                                                    key1 = distKey[0].text
-                                                    x = []
-                                                    if key1 != "0":
-                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
-                                                        x.append(f"{d}")
-                                                        x.append(f'{i}')
-                                                        x.append(str(Decimal(str(float(key1))).quantize(Decimal('0.0000'), rounding='ROUND_HALF_UP') / 100).rstrip("0"))
-                                                        x.append(ISIN)
-                                                        x.append(reportDate[0].text)
-                                                        x.sort()
-                                                        xml_list_detail.append(x)
+
+                                                if distKey_L:
+                                                    if distKey_S:
+                                                        key_L = distKey_L[0].text
+                                                        key_S = distKey_S[0].text
+                                                        key = float(key_L) - float(key_S)
+                                                        x = []
+                                                        if key_L:
+                                                            if key != 0:
+                                                                print(f"distType={d}---@Type={i}---distKey:", key)
+                                                                x.append(f"{d}")
+                                                                x.append(f'{i}')
+                                                                x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                                                                x.append(ISIN)
+                                                                x.append(reportDate[0].text)
+                                                                x.sort()
+                                                                xml_list_detail.append(x)
                                                     else:
-                                                        print(f"distType={d}---@Type={i}---distKey: 0")
+                                                        key_L = distKey_L[0].text
+                                                        key = float(key_L)
+                                                        x = []
+                                                        if key_L:
+                                                            if key != 0:
+                                                                print(f"distType={d}---@Type={i}---distKey:", key)
+                                                                x.append(f"{d}")
+                                                                x.append(f'{i}')
+                                                                x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                                                                x.append(ISIN)
+                                                                x.append(reportDate[0].text)
+                                                                x.sort()
+                                                                xml_list_detail.append(x)
+                                                else:
+                                                    pass
 
                                         if v == "2" or v == "3":  # 债券型 or 货币型
                                             for i in range(1, 17):
-                                                distKey = selector.xpath(
+                                                distKey_L = selector.xpath(
                                                     f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioBreakdown[@_SalePosition='L']/BondRegionalExposure/BreakdownValue[@Type={i}]")
+                                                distKey_S = selector.xpath(
+                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioBreakdown[@_SalePosition='S']/BondRegionalExposure/BreakdownValue[@Type={i}]")
                                                 reportDate = selector.xpath(
                                                     f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
-                                                if distKey:
-                                                    key1 = distKey[0].text
-                                                    x = []
-                                                    if key1 != "0":
-                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
-                                                        x.append(f"{d}")
-                                                        x.append(f'{i}')
-                                                        x.append(str(Decimal(str(float(key1))).quantize(Decimal('0.0000'), rounding='ROUND_HALF_UP') / 100).rstrip("0"))
-                                                        x.append(ISIN)
-                                                        x.append(reportDate[0].text)
-                                                        x.sort()
-                                                        xml_list_detail.append(x)
+
+                                                if distKey_L:
+                                                    if distKey_S:
+                                                        key_L = distKey_L[0].text
+                                                        key_S = distKey_S[0].text
+                                                        key = float(key_L) - float(key_S)
+                                                        x = []
+                                                        if key_L:
+                                                            if key != 0:
+                                                                print(f"distType={d}---@Type={i}---distKey:", key)
+                                                                x.append(f"{d}")
+                                                                x.append(f'{i}')
+                                                                x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                                                                x.append(ISIN)
+                                                                x.append(reportDate[0].text)
+                                                                x.sort()
+                                                                xml_list_detail.append(x)
                                                     else:
-                                                        print(f"distType={d}---@Type={i}---distKey: 0")
+                                                        key_L = distKey_L[0].text
+                                                        key = float(key_L)
+                                                        x = []
+                                                        if key_L:
+                                                            if key != 0:
+                                                                print(f"distType={d}---@Type={i}---distKey:", key)
+                                                                x.append(f"{d}")
+                                                                x.append(f'{i}')
+                                                                x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                                                                x.append(ISIN)
+                                                                x.append(reportDate[0].text)
+                                                                x.sort()
+                                                                xml_list_detail.append(x)
+                                                else:
+                                                    pass
+
 
                                         if v == "8":  # 另类投资型
                                             pass
@@ -279,24 +322,46 @@ class Comparexml:
                                         if v == "1" or v == "4":  # 股票型 or 混合型
                                             industry_list = [101, 102, 103, 104, 205, 206, 207, 308, 309, 310, 311]
                                             for i in industry_list:
-                                                distKey = selector.xpath(
+
+                                                distKey_L = selector.xpath(
                                                     f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioBreakdown[@_SalePosition='L']/GlobalStockSectorBreakdown/BreakdownValue[@Type={i}]")
+                                                distKey_S = selector.xpath(
+                                                    f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioBreakdown[@_SalePosition='S']/GlobalStockSectorBreakdown/BreakdownValue[@Type={i}]")
                                                 reportDate = selector.xpath(
                                                     f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
-                                                if distKey:
-                                                    key1 = distKey[0].text
-                                                    x = []
-                                                    if key1 != "0":
-                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
-                                                        x.append(f"{d}")
-                                                        x.append(f'{i}')
-                                                        x.append(str(Decimal(str(float(key1))).quantize(Decimal('0.0000'), rounding='ROUND_HALF_UP') / 100).rstrip("0"))
-                                                        x.append(ISIN)
-                                                        x.append(reportDate[0].text)
-                                                        x.sort()
-                                                        xml_list_detail.append(x)
+
+                                                if distKey_L:
+                                                    if distKey_S:
+                                                        key_L = distKey_L[0].text
+                                                        key_S = distKey_S[0].text
+                                                        key = float(key_L) - float(key_S)
+                                                        x = []
+                                                        if key_L:
+                                                            if key != 0:
+                                                                print(f"distType={d}---@Type={i}---distKey:", key)
+                                                                x.append(f"{d}")
+                                                                x.append(f'{i}')
+                                                                x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                                                                x.append(ISIN)
+                                                                x.append(reportDate[0].text)
+                                                                x.sort()
+                                                                xml_list_detail.append(x)
                                                     else:
-                                                        print(f"distType={d}---@Type={i}---distKey: 0")
+                                                        key_L = distKey_L[0].text
+                                                        key = float(key_L)
+                                                        x = []
+                                                        if key_L:
+                                                            if key != 0:
+                                                                print(f"distType={d}---@Type={i}---distKey:", key)
+                                                                x.append(f"{d}")
+                                                                x.append(f'{i}')
+                                                                x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                                                                x.append(ISIN)
+                                                                x.append(reportDate[0].text)
+                                                                x.sort()
+                                                                xml_list_detail.append(x)
+                                                else:
+                                                    pass
 
                                         if v == "2":  # 债券型
                                             pass
@@ -350,7 +415,18 @@ class Comparexml:
                                                         key = float(key_L)
                                                         x = []
                                                         if key_L:
-                                                            if key != 0:
+                                                            if key == "0":
+                                                                pass
+                                                            elif key == 100:
+                                                                print(f"distType={d}---@Type={i}---distKey:", key)
+                                                                x.append(f"{d}")
+                                                                x.append(f'{i}')
+                                                                x.append("1")
+                                                                x.append(ISIN)
+                                                                x.append(reportDate[0].text)
+                                                                x.sort()
+                                                                xml_list_detail.append(x)
+                                                            else:
                                                                 print(f"distType={d}---@Type={i}---distKey:", key)
                                                                 x.append(f"{d}")
                                                                 x.append(f'{i}')
@@ -401,7 +477,18 @@ class Comparexml:
                                                         key = float(key_L)
                                                         x = []
                                                         if key_L:
-                                                            if key != 0:
+                                                            if key == 0.0:
+                                                                pass
+                                                            elif key == 100:
+                                                                print(f"distType={d}---@Type={i}---distKey:", key)
+                                                                x.append(f"{d}")
+                                                                x.append(f'{i}')
+                                                                x.append("1")
+                                                                x.append(ISIN)
+                                                                x.append(reportDate[0].text)
+                                                                x.sort()
+                                                                xml_list_detail.append(x)
+                                                            else:
                                                                 print(f"distType={d}---@Type={i}---distKey:", key)
                                                                 x.append(f"{d}")
                                                                 x.append(f'{i}')
@@ -417,13 +504,13 @@ class Comparexml:
                         for x in xml_list_detail:
                             xml_list.append(x)
                             xml_list.sort()
-            print(xml_list)
+            # print(xml_list)
         return xml_list
 
 
     def read_distribution_csv(self):
         distribution_csv_dic = {}
-        with open(self.distribution_filepath, 'r', encoding='utf-8') as f:
+        with open(self.distribution_filepath, 'r') as f:
             reader = csv.reader(f)
             i = 0
             for row in reader:
