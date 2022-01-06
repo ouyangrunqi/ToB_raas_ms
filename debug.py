@@ -12,7 +12,6 @@ from datetime import datetime
 import xlrd
 from decimal import Decimal
 
-
 starttime = datetime.now()
 print(starttime)
 
@@ -337,18 +336,22 @@ class Comparexml:
                         Weighting = re.findall("<Weighting>(.*?)</Weighting>", hd)
                         if Weighting:
                             print(f"Weighting", Weighting[0])
-                            weight_text = Weighting[0]
-                            weight_float = float(Weighting[0])
+                            weight_text = str((Decimal(Weighting[0]) / 100).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP')).rstrip("0")
+                            weight_float = float(weight_text)
                             # 持仓占比
                             xml_list_detail.append(ISIN)
                             isin_code = re.findall("<ISIN>(.*?)</ISIN>", hd)
                             if isin_code:
                                 print(isin_code[0])
                                 xml_list_detail.append(isin_code[0])
+                            # else:
+                            #     xml_list_detail.append("")
                             currency = re.findall('<Currency _Id="(.*?)">',hd)
                             if currency:
                                 print(currency[0])
                                 xml_list_detail.append(currency[0])
+                            else:
+                                xml_list_detail.append("")
                             security_name = re.findall("<SecurityName>(.*?)</SecurityName>", hd)
                             if security_name:
                                 print(security_name[0])
@@ -486,7 +489,6 @@ class Comparexml:
         # print(f'地区分类_基金分类白名单: \n\t{region_dic}')
         # print(f'行业分类_基金分类白名单: \n\t{fundIndustry_dic}')
 
-
         # 基金类型  1-股票型  2-债券型  3-货币型  4-混合型  8-另类投资型
         for k, v in fundInvestType_dic.items():
             if fundInvestType_dic[k] == '股票型':
@@ -571,7 +573,9 @@ class Comparexml:
 
             # basicInfo
             # fundFactSheet-基金月报  fundStatement-基金章程  fundAnnualReport-年度报告  fundInterimReport-中期报告  fundProspectus-基金说明书
-            url2 = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=512&Currencies=BAS&from=from_parent_mindnote"
+            # url2 = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=512&Currencies=BAS&from=from_parent_mindnote" # 下载的文档有水印
+
+            url2 = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnum2022&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=512&Currencies=BAS"  # 用sunrui的账号无水印
             res = requests.get(url)
 
             if res.status_code == 200:
@@ -580,33 +584,20 @@ class Comparexml:
                 xml_basicInfo_FundShareClass = re.findall('<FundShareClass .*?>(.*?)</FundShareClass>', xml_basicInfo,re.S)  # 修饰符re.S  使.匹配包括换行在内的所有字符
                 # fundNameEN
                 xml_basicInfo_Operation = re.findall('<Operation>(.*?)</Operation>', xml_basicInfo,re.S)
-                # fundNameSC
-                # xml_basicInfo_MultilingualVariation = re.findall(f'<MultilingualVariation _Id="{MS_SECID}">(.*?)</MultilingualVariation>', xml_basicInfo, re.S)
                 # baseCurrency,基金信息板块下展示该币种
                 xml_basicInfo_PerformanceId = re.findall('<PerformanceId>(.*?)</PerformanceId>', xml_basicInfo, re.S)
                 # 基金市场状态  0-停止  1-开放期  2-募集期
                 xml_basicInfo_Status = re.findall(f'<FundShareClass _Id="{MS_SECID}" _FundId=".*?" _Status="(.*?)">',xml_basicInfo,re.S)
 
-
                 if xml_basicInfo:
                     basicInfo_list = xml_basicInfo_FundShareClass[0]
                     basicInfo_list_Operation = xml_basicInfo_Operation[0]
-                    # basicInfo_list_MultilingualVariation = xml_basicInfo_MultilingualVariation[0]
-                    # # 币种位置固定可用
-                    # basicInfo_list_PerformanceId = xml_basicInfo_PerformanceId[-1]
                     basicInfo_list_PerformanceId = [c for c in xml_basicInfo_PerformanceId if "CurrencyId" in c]
-                    # basicInfo_Status = xml_basicInfo_Status[0]
-
-
-
                     basicInfo_FundShareClass = basicInfo_list.split("</FundShareClass>")
                     basicInfo_ShareClassBasics =basicInfo_list_Operation.split("</LegalName>")
-                    # basicInfo_MultilingualVariation = basicInfo_list_MultilingualVariation.split('<LanguageVariation _LanguageId="0L00000082">')
-                    # basicInfo_PerformanceId = basicInfo_list_PerformanceId.split("</CurrencyId>")
                     basicInfo_PerformanceId = basicInfo_list_PerformanceId[0]
                     # shareClassCurrency,除基金信息板块外其他页面展示这个币种
                     basicInfo_shareClassCurrency = basicInfo_list_Operation.split("</Currency>")
-
 
                     for m in basicInfo_FundShareClass:
                         xml_list_detail = []
@@ -626,14 +617,24 @@ class Comparexml:
                         selector = etree.XML(data.content)
                         selector2 = etree.XML(date2.content)
 
-                        xml_MultilingualVariation = selector.xpath(f'//MultilingualVariation[@_Id="{MS_SECID}"]/../MultilingualVariation')
-                        if xml_MultilingualVariation:
-                            xml_LanguageVariation = selector.xpath('//LanguageVariation[@_LanguageId="0L00000082"]/../LanguageVariation')
-                            if xml_LanguageVariation:
-                                fundNameSC = selector.xpath(f'/FundShareClass/Fund/MultilingualVariation/LanguageVariation[@_LanguageId="0L00000082"]/RegionVariation/Name')
-                                print(f"fundNameSC:", fundNameSC[0].text)
-                                xml_list_detail.append(fundNameSC[0].text)
-                        # for Currency in basicInfo_PerformanceId:
+                        # xml_MultilingualVariation = selector.xpath(f'//MultilingualVariation[@_Id="{MS_SECID}"]/../MultilingualVariation')
+                        # if xml_MultilingualVariation:
+                        #     xml_LanguageVariation = selector.xpath('//LanguageVariation[@_LanguageId="0L00000082"]/../LanguageVariation')
+                        #     if xml_LanguageVariation:
+                        fundNameSC_1 = selector.xpath(
+                            f'/FundShareClass/MultilingualVariation/LanguageVariation[@_LanguageId="0L00000082"]/RegionVariation/Name')
+                        fundNameSC_2 = selector.xpath(
+                            f'/FundShareClass/Fund/MultilingualVariation/LanguageVariation[@_LanguageId="0L00000082"]/RegionVariation/Name')
+                        if fundNameSC_1:
+                            print(f"fundNameSC:", fundNameSC_1[0].text)
+                            xml_list_detail.append(fundNameSC_1[0].text)
+                        elif fundNameSC_2:
+                            print(f"fundNameSC:", fundNameSC_2[0].text)
+                            xml_list_detail.append(fundNameSC_2[0].text)
+                        else:
+                            print(f"fundNameSC:无数据")
+                            xml_list_detail.append("")
+
                         baseCurrency = re.findall("<CurrencyId>(.*)</CurrencyId>",basicInfo_PerformanceId)
                         if baseCurrency:
                             print(f"baseCurrency:", baseCurrency[0])
@@ -694,7 +695,7 @@ class Comparexml:
                             xml_list_detail.append((sharpeRatioM12[0].text).rstrip("0"))
                         else:
                             print(f"sharpeRatioM12: 数据缺失")
-                            xml_list_detail.append("sharpeRatioM12: N/A")
+                            xml_list_detail.append("")
 
                         # 三年夏普比例
                         sharpeRatioM36 = selector.xpath(f"/FundShareClass/ClassPerformance/Performance/TrailingPerformance[@Type='1000']/RiskAndRating/RiskAnalysis/RiskMeasures/RiskMeasuresDetail[@TimePeriod='M36' and @Type='61']/SharpeRatio")
@@ -713,7 +714,7 @@ class Comparexml:
                             xml_list_detail.append(str(round(float(maxDrawdownM12[0].text)/100, 4)))
                         else:
                             print(f"maxDrawdownM12: 数据缺失")
-                            xml_list_detail.append("maxDrawdownM12: N/A")
+                            xml_list_detail.append("")
 
                         # 最大三年回撤
                         maxDrawdownM36 = selector.xpath(
@@ -733,7 +734,7 @@ class Comparexml:
                             xml_list_detail.append(str(round(float(standardDeviationM12[0].text)/100, 4)))
                         else:
                             print(f"standardDeviationM12: 数据缺失")
-                            xml_list_detail.append("standardDeviationM12: N/A")
+                            xml_list_detail.append("")
 
                         # 三年波幅
                         standardDeviationM36 = selector.xpath(
@@ -831,12 +832,16 @@ class Comparexml:
                         if fundManagementCompanyEN:
                             print(f"fundManagementCompanyEN:", fundManagementCompanyEN[0].text)
                             xml_list_detail.append(fundManagementCompanyEN[0].text)
+                        else:
+                            xml_list_detail.append("")
 
                         # 基金管理公司名称-SC
                         fundManagementCompanySC = selector.xpath('//CompanyOperation//LanguageVariation[@_LanguageId="0L00000082"]/RegionVariation/Name')
                         if fundManagementCompanySC:
                             print(f"fundManagementCompanySC:", fundManagementCompanySC[0].text)
                             xml_list_detail.append(fundManagementCompanySC[0].text)
+                        else:
+                            xml_list_detail.append("")
 
                         # 投资目标简述
                         fundInvestObject = selector.xpath('//ShareClassNarratives[@_LanguageId="0L00000122"]/KIIDObjective')
@@ -889,9 +894,12 @@ class Comparexml:
                         if fundStatement_cn:
                             print(f"fundStatement_cn:", fundStatement_cn[0].text)
                             xml_list_detail.append(fundStatement_cn[0].text)
-                        else:
+                        elif fundStatement_en:
                             print(f"fundStatement_en:", fundStatement_en[0].text)
                             xml_list_detail.append(fundStatement_en[0].text)
+                        else:
+                            print(f"fundStatement: N/A")
+                            xml_list_detail.append("N/A")
 
                         # 年度报告
                         fundAnnualReport_cn = selector2.xpath(
@@ -901,9 +909,12 @@ class Comparexml:
                         if fundAnnualReport_cn:
                             print(f"fundAnnualReport_cn:", fundAnnualReport_cn[0].text)
                             xml_list_detail.append(fundAnnualReport_cn[0].text)
-                        else:
+                        elif fundAnnualReport_en:
                             print(f"fundAnnualReport_en:", fundAnnualReport_en[0].text)
                             xml_list_detail.append(fundAnnualReport_en[0].text)
+                        else:
+                            print(f"fundAnnualReport: N/A")
+                            xml_list_detail.append("N/A")
 
                         # 中期报告
                         fundInterimReport_cn = selector2.xpath(
@@ -913,9 +924,12 @@ class Comparexml:
                         if fundInterimReport_cn:
                             print(f"fundInterimReport_cn:", fundInterimReport_cn[0].text)
                             xml_list_detail.append(fundInterimReport_cn[0].text)
-                        else:
+                        elif fundInterimReport_en:
                             print(f"fundInterimReport_en:", fundInterimReport_en[0].text)
                             xml_list_detail.append(fundInterimReport_en[0].text)
+                        else:
+                            print(f"fundInterimReport: N/A")
+                            xml_list_detail.append("N/A")
 
                         # 基金说明书
                         fundProspectus_cn = selector2.xpath(
@@ -925,9 +939,12 @@ class Comparexml:
                         if fundProspectus_cn:
                             print(f"fundProspectus_cn:", fundProspectus_cn[0].text)
                             xml_list_detail.append(fundProspectus_cn[0].text)
-                        else:
+                        elif fundProspectus_en:
                             print(f"fundProspectus_en:", fundProspectus_en[0].text)
                             xml_list_detail.append(fundProspectus_en[0].text)
+                        else:
+                            print(f"fundProspectus: N/A")
+                            xml_list_detail.append("N/A")
 
                         # 收益率同类表现排名-1M
                         peerGroupRankM1 = selector.xpath(f'/FundShareClass/ClassPerformance/Performance/TrailingPerformance/TrailingReturn/Return[@Type="1"]/ReturnDetail[@TimePeriod="M1"]/PeerGroupRank/PeerGroupRankDetail/PercentileRank')
@@ -984,11 +1001,13 @@ class Comparexml:
                             print(f"netExpenseRatio: 缺少netExpenseRatio")
                             xml_list_detail.append("")
 
-                        # 年报日期
-                        annualReportDate = selector.xpath(f"/FundShareClass/Operation/AnnualReport[@_Type='1']/Date")
-                        if annualReportDate:
-                            print(f"annualReportDate:", annualReportDate[0].text)
-                            xml_list_detail.append(annualReportDate[0].text)
+                        # # 年报日期
+                        # annualReportDate = selector.xpath(f"/FundShareClass/Operation/AnnualReport[@_Type='1']/Date")
+                        # if annualReportDate:
+                        #     print(f"annualReportDate:", annualReportDate[0].text)
+                        #     xml_list_detail.append(annualReportDate[0].text)
+                        # else:
+                        #     xml_list_detail.append("")
 
                         # 管理费
                         managementFee = selector.xpath(f'/FundShareClass/Operation/Prospectus/ManagementFee/FeeSchedule/Value')
@@ -996,6 +1015,8 @@ class Comparexml:
                             x = managementFee[0].text
                             print(f"managementFee:", x)
                             xml_list_detail.append(str(Decimal(x).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                        else:
+                            xml_list_detail.append("")
 
                         # categoryId = selector.xpath(f"/FundShareClass[@_Status='1']/Fund/FundBasics/@_CategoryId")
                         # if categoryId:
@@ -1020,7 +1041,7 @@ class Comparexml:
                 if i == 0:
                     pass
                 else:
-                    row = row[0:16] + row [17:20] + row[21:-2]
+                    row = row[0:16] + row[17:20] + row[21:-4] + row[-3:-3]
                     annualReportDate = row[-2]  # 读取csv中的日期
                     if "/" in annualReportDate:
                         csv_managerStartDate = annualReportDate.split("/")  # csv中，年月日，根据"/"切割
@@ -1104,7 +1125,7 @@ class Comparexml:
                     xml_list_detail = []
 
                     ID = f'{ISIN}'
-                    distType = ["100", "200", "300"] # 100-地区分布  200-行业分布  300-资产类型分布
+                    distType = ["100", "200", "300"]  # 100-地区分布  200-行业分布  300-资产类型分布
                     for d in distType:
 
                         if d == "100":
@@ -1138,19 +1159,28 @@ class Comparexml:
                                                 reportDate = selector.xpath(
                                                     f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
                                                 if distKey:
-                                                    key1 = distKey[0].text
+                                                    key = distKey[0].text
                                                     x = []
-                                                    if key1 != "0":
-                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
+                                                    if key == "0":
+                                                        pass
+                                                    elif key == 100:
+                                                        print(f"distType={d}---@Type={i}---distKey:", key)
                                                         x.append(f"{d}")
                                                         x.append(f'{i}')
-                                                        x.append(str(Decimal(str(float(key1))).quantize(Decimal('0.0000'), rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                                                        x.append("1")
                                                         x.append(ISIN)
                                                         x.append(reportDate[0].text)
                                                         x.sort()
                                                         xml_list_detail.append(x)
                                                     else:
-                                                        print(f"distType={d}---@Type={i}---distKey: 0")
+                                                        print(f"distType={d}---@Type={i}---distKey:", key)
+                                                        x.append(f"{d}")
+                                                        x.append(f'{i}')
+                                                        x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                                                        x.append(ISIN)
+                                                        x.append(reportDate[0].text)
+                                                        x.sort()
+                                                        xml_list_detail.append(x)
 
                                         if v == "2" or v == "3":  # 债券型 or 货币型
                                             for i in range(1, 17):
@@ -1159,19 +1189,29 @@ class Comparexml:
                                                 reportDate = selector.xpath(
                                                     f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
                                                 if distKey:
-                                                    key1 = distKey[0].text
+                                                    key = distKey[0].text
                                                     x = []
-                                                    if key1 != "0":
-                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
+                                                    if key == "0":
+                                                        pass
+                                                    elif key == 100:
+                                                        print(f"distType={d}---@Type={i}---distKey:", key)
                                                         x.append(f"{d}")
                                                         x.append(f'{i}')
-                                                        x.append(str(Decimal(str(float(key1))).quantize(Decimal('0.0000'), rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                                                        x.append("1")
                                                         x.append(ISIN)
                                                         x.append(reportDate[0].text)
                                                         x.sort()
                                                         xml_list_detail.append(x)
                                                     else:
-                                                        print(f"distType={d}---@Type={i}---distKey: 0")
+                                                        print(f"distType={d}---@Type={i}---distKey:", key)
+                                                        x.append(f"{d}")
+                                                        x.append(f'{i}')
+                                                        x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                                                        x.append(ISIN)
+                                                        x.append(reportDate[0].text)
+                                                        x.sort()
+                                                        xml_list_detail.append(x)
+
 
                                         if v == "8":  # 另类投资型
                                             pass
@@ -1202,19 +1242,28 @@ class Comparexml:
                                                 reportDate = selector.xpath(
                                                     f"/FundShareClass/Fund/PortfolioList/Portfolio/PortfolioSummary/Date")
                                                 if distKey:
-                                                    key1 = distKey[0].text
+                                                    key = distKey[0].text
                                                     x = []
-                                                    if key1 != "0":
-                                                        print(f"distType={d}---@Type={i}---distKey:", distKey[0].text)
+                                                    if key == "0":
+                                                        pass
+                                                    elif key == 100:
+                                                        print(f"distType={d}---@Type={i}---distKey:", key)
                                                         x.append(f"{d}")
                                                         x.append(f'{i}')
-                                                        x.append(str(Decimal(str(float(key1))).quantize(Decimal('0.0000'), rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                                                        x.append("1")
                                                         x.append(ISIN)
                                                         x.append(reportDate[0].text)
                                                         x.sort()
                                                         xml_list_detail.append(x)
                                                     else:
-                                                        print(f"distType={d}---@Type={i}---distKey: 0")
+                                                        print(f"distType={d}---@Type={i}---distKey:", key)
+                                                        x.append(f"{d}")
+                                                        x.append(f'{i}')
+                                                        x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                                                        x.append(ISIN)
+                                                        x.append(reportDate[0].text)
+                                                        x.sort()
+                                                        xml_list_detail.append(x)
 
                                         if v == "2":  # 债券型
                                             pass
@@ -1319,7 +1368,18 @@ class Comparexml:
                                                         key = float(key_L)
                                                         x = []
                                                         if key_L:
-                                                            if key != 0:
+                                                            if key == 0.0:
+                                                                pass
+                                                            elif key == 100:
+                                                                print(f"distType={d}---@Type={i}---distKey:", key)
+                                                                x.append(f"{d}")
+                                                                x.append(f'{i}')
+                                                                x.append("1")
+                                                                x.append(ISIN)
+                                                                x.append(reportDate[0].text)
+                                                                x.sort()
+                                                                xml_list_detail.append(x)
+                                                            else:
                                                                 print(f"distType={d}---@Type={i}---distKey:", key)
                                                                 x.append(f"{d}")
                                                                 x.append(f'{i}')
@@ -1423,156 +1483,7 @@ class Comparexml:
                 print('\ndistribution.csv >>>校验通过，数据一致!')
         else:
             print('数据量不一致')
-            self.write_compare_data('result_manager.txt', '数据量不一致', times)
-
-
-    def get_PerformanceId(self):
-
-        PerformanceId_list = []
-        id_list = self.get_white()
-        for m in id_list:
-            m = m.split('==')
-            ISIN = m[0]
-            MS_SECID = m[1]
-
-            url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
-            res = requests.get(url=url, headers=self.headers)
-            data = requests.get(url=url, headers=self.headers)
-            selector = etree.XML(data.content)
-            pid_dict = {}
-            if res.status_code == 200:
-                print(f">>>>>>>>>>开始获取'{MS_SECID}'的PerformanceId>>>>>>>>>>")
-                xml_market = res.text
-                if xml_market:
-                    xml_PerformanceId = selector.xpath(f"/FundShareClass/PerformanceId/Result/PerformanceId")
-                    if xml_PerformanceId:
-                        PerformanceId = xml_PerformanceId[0].text
-                        pid_dict[ISIN] = PerformanceId
-                        print(pid_dict)
-                        PerformanceId_list.append(pid_dict)
-
-
-        print(PerformanceId_list)
-        return PerformanceId_list
-
-
-
-    def xml_market(self):
-        xml_list = []
-        # x = []
-        PerformanceId_list = []
-        id_list = self.get_white()
-        pid = self.get_PerformanceId()
-        for m in id_list:
-            m = m.split('==')
-            ISIN = m[0]
-            MS_SECID = m[1]
-
-            x = []
-            for i in pid:
-                for k, v in i.items():
-                    if k == ISIN:
-                        id = v
-                        nav_list = []
-                        fqnav_list = []
-                        nav_data_list = []
-
-                        curr_time = datetime.now()
-                        EndDate = curr_time.strftime("%Y-%m-%d")
-
-                        url2 = f"https://edw.morningstar.com/HistoryData/HistoryData.aspx?ClientId=magnumhk&DataType=Price&PerformanceId={id}&StartDate=2021-12-20&EndDate={EndDate}&Obsolete=1"
-                        url3 = f"https://edw.morningstar.com/HistoryData/HistoryData.aspx?ClientId=magnumhk&DataType=Rips&PerformanceId={id}&StartDate=2021-12-20&EndDate={EndDate}&Obsolete=1&from=from_parent_mindnote"
-
-                        res2 = requests.get(url=url2, headers=self.headers)
-                        res3 = requests.get(url=url3, headers=self.headers)
-
-                        nav_detail = res2.text
-                        fqnav_detail = res3.text
-
-                        nav_data = nav_detail.split("\r\n")[1]
-                        y = nav_data.split(";")
-                        nav_Date = y[2]
-                        CurrencyISO = y[3]
-                        PreTaxNav = str(Decimal(y[4]).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP')).rstrip("0")
-
-                        nav_data_list.append(nav_Date)
-                        nav_data_list.append(CurrencyISO)
-                        nav_data_list.append(PreTaxNav)
-
-                        fqnav_data = fqnav_detail.split("\r\n")[1]
-                        yy = fqnav_data.split(";")
-                        fqnav_Date = yy[2]
-                        # Unit_BAS = yy[4]
-                        Unit_BAS = str(Decimal(yy[4]).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP')).rstrip("0")
-
-                        nav_data_list.append(Unit_BAS)
-                        nav_data_list.append(ISIN)
-                        nav_data_list.sort()
-                        # print(nav_data_list)
-            xml_list.append(nav_data_list)
-            xml_list.sort()
-        print(xml_list)
-        return(xml_list)
-
-    def read_market_csv(self):
-        market_csv_dic = {}
-        with open(self.market_filepath, 'r', encoding='utf-8') as f:
-            reader = csv.reader(f)
-            i = 0
-            for row in reader:
-                if i == 0:
-                    pass
-                else:
-                    row = row[0:4] + row[-1:]
-                    reportDate = row[-1]  # 读取csv中的日期
-                    if "/" in reportDate:
-                        csv_reportDate = reportDate.split("/")  # csv中，年月日，根据"/"切割
-                        reportDate = self.date_conversion(csv_reportDate)  # 把切割后的列表传进日期转换的方法date_conversion()
-                    if "-" in reportDate:  # 同理，月份1~9加0，日期1~9加0
-                        csv_reportDate = reportDate.split("-")
-                        reportDate = self.date_conversion(csv_reportDate)
-                    row[-1] = reportDate
-
-                    row.sort()
-                    market_csv_dic[f"第{i}行"] = row
-                i += 1
-            print(market_csv_dic)
-            return market_csv_dic
-
-
-    def compare_market(self):
-        '''
-        比较 market.csv文件
-        '''
-        times = self.get_time()
-        print('\n>>>>>>>>>>正在比较market.csv文件>>>>>>>>>>')
-        market_list = self.xml_market()
-        # print(market_list)
-        print(f"ms数据量：",len(market_list))
-        csv_data = self.read_market_csv()
-        # print(csv_data)
-        print(f"market.csv数据量：",len(csv_data))
-
-        if len(market_list) == len(csv_data):
-            j = 0
-            for k, v in csv_data.items():
-                i = 0
-                for cm in market_list:
-                    if operator.eq(cm, v):
-                        i += 1
-                        j += 1
-                    else:
-                        pass
-                # i += 1 # 打印相同数据
-                if i != 1:# 数据相同，i计数+1,即相同的数据不写入txt
-                    self.write_compare_data('result_market.txt', k, times)
-                    print(f'数据不一致：',k)
-            if j == len(market_list):# 数据比对相同时，j的计数+1，相同数=总数，数据一致。
-                print('\nmarket.csv >>>校验通过，数据一致!')
-        else:
-            print('数据量不一致')
-            self.write_compare_data('result_manager.txt', '数据量不一致', times)
-
+            self.write_compare_data('result_distribution.txt', '数据量不一致', times)
 
 if __name__ == '__main__':
     c = Comparexml()
@@ -1606,7 +1517,7 @@ if __name__ == '__main__':
     # 读取basicInfo_csv内容
     # c.read_basicInfo_csv()
     # 校验basicInfo.csv内容
-    c.compare_basicInfo()
+    # c.compare_basicInfo()
 
     # 获取xml_distribution数据
     # c.xml_distribution()
@@ -1615,7 +1526,7 @@ if __name__ == '__main__':
     # c.read_distribution_csv()
 
     # 校验distribution.csv内容
-    # c.compare_distribution()
+    c.compare_distribution()
 
     # 获取PerformanceId
     # c.get_PerformanceId()
