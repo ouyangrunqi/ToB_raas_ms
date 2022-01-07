@@ -1186,11 +1186,20 @@ class Comparexml:
                                                         key_L = distKey_L[0].text
                                                         key = float(key_L)
                                                         x = []
-                                                        if key != 0 and key != 0.0:
+                                                        if key != 0 and key != 0.0 and key != 100.0:
                                                             print(f"distType={d}---@Type={i}---distKey:", key)
                                                             x.append(f"{d}")
                                                             x.append(f'{i}')
                                                             x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                                                            x.append(ISIN)
+                                                            x.append(reportDate[0].text)
+                                                            x.sort()
+                                                            xml_list_detail.append(x)
+                                                        elif key == 100.0:
+                                                            print(f"distType={d}---@Type={i}---distKey:", key)
+                                                            x.append(f"{d}")
+                                                            x.append(f'{i}')
+                                                            x.append("1")
                                                             x.append(ISIN)
                                                             x.append(reportDate[0].text)
                                                             x.sort()
@@ -1228,11 +1237,20 @@ class Comparexml:
                                                         key_L = distKey_L[0].text
                                                         key = float(key_L)
                                                         x = []
-                                                        if key != 0 and key != 0.0:
+                                                        if key != 0 and key != 0.0 and key != 100.0:
                                                             print(f"distType={d}---@Type={i}---distKey:", key)
                                                             x.append(f"{d}")
                                                             x.append(f'{i}')
                                                             x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                                                            x.append(ISIN)
+                                                            x.append(reportDate[0].text)
+                                                            x.sort()
+                                                            xml_list_detail.append(x)
+                                                        elif key == 100.0:
+                                                            print(f"distType={d}---@Type={i}---distKey:", key)
+                                                            x.append(f"{d}")
+                                                            x.append(f'{i}')
+                                                            x.append("1")
                                                             x.append(ISIN)
                                                             x.append(reportDate[0].text)
                                                             x.sort()
@@ -1294,11 +1312,20 @@ class Comparexml:
                                                         key_L = distKey_L[0].text
                                                         key = float(key_L)
                                                         x = []
-                                                        if key != 0 and key != 0.0:
+                                                        if key != 0 and key != 0.0 and key != 100.0:
                                                             print(f"distType={d}---@Type={i}---distKey:", key)
                                                             x.append(f"{d}")
                                                             x.append(f'{i}')
                                                             x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                                                            x.append(ISIN)
+                                                            x.append(reportDate[0].text)
+                                                            x.sort()
+                                                            xml_list_detail.append(x)
+                                                        elif key == 100.0:
+                                                            print(f"distType={d}---@Type={i}---distKey:", key)
+                                                            x.append(f"{d}")
+                                                            x.append(f'{i}')
+                                                            x.append("1")
                                                             x.append(ISIN)
                                                             x.append(reportDate[0].text)
                                                             x.sort()
@@ -1359,11 +1386,20 @@ class Comparexml:
                                                         key_L = distKey_L[0].text
                                                         key = float(key_L)
                                                         x = []
-                                                        if key != 0 and key != 0.0:
+                                                        if key != 0 and key != 0.0 and key != 100.0:
                                                             print(f"distType={d}---@Type={i}---distKey:", key)
                                                             x.append(f"{d}")
                                                             x.append(f'{i}')
                                                             x.append(str(Decimal(str(float(key))).quantize(Decimal('0.0000'),rounding='ROUND_HALF_UP') / 100).rstrip("0"))
+                                                            x.append(ISIN)
+                                                            x.append(reportDate[0].text)
+                                                            x.sort()
+                                                            xml_list_detail.append(x)
+                                                        elif key == 100.0:
+                                                            print(f"distType={d}---@Type={i}---distKey:", key)
+                                                            x.append(f"{d}")
+                                                            x.append(f'{i}')
+                                                            x.append("1")
                                                             x.append(ISIN)
                                                             x.append(reportDate[0].text)
                                                             x.sort()
@@ -1520,7 +1556,7 @@ if __name__ == '__main__':
     # c.read_holding_csv()
 
     # # 校验holding.csv
-    # c.compare_holding()
+    c.compare_holding()
 
 
     # # 获取xml_basicInfo数据
@@ -1539,7 +1575,7 @@ if __name__ == '__main__':
     # c.read_distribution_csv()
 
     # 校验distribution.csv内容
-    c.compare_distribution()
+    # c.compare_distribution()
 
     # 获取PerformanceId
     # c.get_PerformanceId()

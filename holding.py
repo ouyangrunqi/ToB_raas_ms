@@ -10,13 +10,15 @@ import operator
 import os
 from datetime import datetime
 import xlrd
+from decimal import Decimal
+
 
 starttime = datetime.now()
 
 class Comparexml:
     def __init__(self):
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36'}
-        self.holdingcsv_filepath = r'D:\ms\holding_1640133606547.csv'
+        self.holdingcsv_filepath = r'D:\ms\holding_debug.csv'
 
 
     def get_white(self):
@@ -24,7 +26,7 @@ class Comparexml:
         获取白名单 ISIN==MS_SECID
         '''
         id = []
-        with open('white_all_162.txt', 'r', encoding='utf-8')as f:
+        with open('LU.txt', 'r', encoding='utf-8')as f:
             for x in f.readlines():
                 id.append(x.replace('\n', ''))
         return id
@@ -71,11 +73,13 @@ class Comparexml:
             ISIN = m[0]
             MS_SECID = m[1]
 
-            url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
+            # url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
+
+            url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnum2022&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS&Obsolete=1 "
             res = requests.get(url)
 
             if res.status_code == 200:
-                print(f">>>>>>>>>>开始获取{MS_SECID}的数据>>>>>>>>>>")
+                print(f">>>>>>>>>>开始获取'{MS_SECID}'的数据>>>>>>>>>>")
                 xml_holding_text = res.text
                 xml_holding = re.findall('<Holding>(.*?)</Holding>', xml_holding_text, re.S)  # 修饰符re.S  使.匹配包括换行在内的所有字符
                 # reportDate在其他位置
@@ -100,18 +104,23 @@ class Comparexml:
                         Weighting = re.findall("<Weighting>(.*?)</Weighting>", hd)
                         if Weighting:
                             # print(f"Weighting", Weighting[0])
-                            weight_text = Weighting[0]
-                            weight_float = float(Weighting[0])
+                            weight_text = str((Decimal(Weighting[0]) / 100).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP')).rstrip("0")
+                            weight_float = float(weight_text)
                             # 持仓占比
                             xml_list_detail.append(ISIN)
                             isin_code = re.findall("<ISIN>(.*?)</ISIN>", hd)
                             if isin_code:
                                 # print(isin_code[0])
                                 xml_list_detail.append(isin_code[0])
+                            else:
+                                pass
+                            #     xml_list_detail.append("")
                             currency = re.findall('<Currency _Id="(.*?)">',hd)
                             if currency:
                                 # print(currency[0])
                                 xml_list_detail.append(currency[0])
+                            else:
+                                pass
                             security_name = re.findall("<SecurityName>(.*?)</SecurityName>", hd)
                             if security_name:
                                 # print(security_name[0])
@@ -139,7 +148,7 @@ class Comparexml:
                             for k, v in xxx.items():
                                 if wl == k:
                                     new_xml_list.append(v)
-                # print(new_xml_list)
+                print(new_xml_list)
         return new_xml_list
 
 
@@ -159,7 +168,7 @@ class Comparexml:
 
     def read_holding_csv(self):
         holding_csv_dic = {}
-        with open(self.holdingcsv_filepath, 'r', encoding='utf-8') as f:
+        with open(self.holdingcsv_filepath, 'r') as f:
             reader = csv.reader(f)
             i = 0
             for row in reader:
