@@ -11,7 +11,7 @@ import os
 from datetime import datetime
 import xlrd
 from decimal import Decimal
-
+from itertools import zip_longest
 
 starttime = datetime.now()
 
@@ -95,12 +95,17 @@ class Comparexml:
                     holding_detail = holding_list.split("</HoldingDetail>")
 
                     weight_list_detail = []
+                    l = []
+                    ll = []
                     weight_list = []
                     # 遍历序列中的元素及其下标
                     for num, hd in enumerate(holding_detail):
                         xml_list_detail = []
                         xml_dic_detail = {}
                         weight_dic = {}
+                        xml_list_detail_2 = []
+                        w_list = []
+                        dic_detail = []
                         Weighting = re.findall("<Weighting>(.*?)</Weighting>", hd)
                         if Weighting:
                             # print(f"Weighting", Weighting[0])
@@ -123,42 +128,61 @@ class Comparexml:
                                 pass
                             security_name = re.findall("<SecurityName>(.*?)</SecurityName>", hd)
                             if security_name:
-                                # print(security_name[0])
                                 xml_list_detail.append(security_name[0])
 
-                            xml_list_detail.append(weight_text)
                             xml_list_detail.append(holding_detail_date[0])
                             xml_list_detail.sort()
+                            xml_list_detail.append(weight_float)
+                            l.append(xml_list_detail)
 
-                            xml_dic_detail[num] = xml_list_detail
-                            weight_dic[num] = weight_float
+                            nw = {}
+                            sum_list = []
+                            for x in l:
+                                key = tuple(x[:-1])
+                                nw[key] = [i + j for i, j in zip_longest(nw.get(key, []), x[-1:], fillvalue=0)]
 
-                            weight_list.append(weight_dic)
-                            weight_list_detail.append(weight_float)
+                            sum_v = []
+                            for k, v in nw.items():
+                                k = list(k)
+                                sum_list.append(k)
+                                k.append(str(v[0]))
+                                sum_v.append(v[0])
+
+                            ll = sum_list
+
+                            for i, j in enumerate(ll):
+                                xml_dic_detail[i] = j
+                            dic_detail.append(xml_dic_detail)
+                            xml_list = dic_detail
+
+                            for ii, jj in enumerate(sum_v):
+                                weight_dic[ii] = jj
+                            w_list.append(weight_dic)
+                            weight_list = w_list
                             # print("================================")
-                            xml_list.append(xml_dic_detail)
-
-                    weight_list_detail = sorted(weight_list_detail, key=float, reverse=True)
-                    # print(weight_list_detail)
-                    weight_num_list = self.get_weight_num(weight_list_detail, weight_list)
-                    # print(f"排序后的weight坐标: {weight_num_list}")
+                    sum_v = sorted(sum_v, key=float, reverse=True)
+                    weight_num_list = self.get_weight_num(sum_v, weight_list)
+                    print(f"排序后的weight坐标: {weight_num_list}")
                     # 根据新坐标获取列表
                     for wl in weight_num_list[:10]:
                         for xxx in xml_list:
                             for k, v in xxx.items():
                                 if wl == k:
                                     new_xml_list.append(v)
+                # print(f"new_xml_list:", new_xml_list)
+                for i in new_xml_list:
+                    i = i.sort()
                 print(new_xml_list)
         return new_xml_list
 
 
-    def get_weight_num(self,weight_list_detail, weight_list):
+    def get_weight_num(self,sum_v, weight_list):
         """
         获取weight从大到小的坐标
         :return:
         """
         new_weight_num = []
-        for wd in weight_list_detail:
+        for wd in sum_v:
             for xx in weight_list:
                 for k, v in xx.items():
                     if wd == v:

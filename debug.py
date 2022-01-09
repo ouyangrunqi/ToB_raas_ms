@@ -33,23 +33,11 @@ class Comparexml:
         获取白名单 ISIN==MS_SECID
         '''
         id = []
-        with open('white_debug.txt', 'r', encoding='utf-8')as f:
+        with open('IE.txt', 'r', encoding='utf-8')as f:
             for x in f.readlines():
                 id.append(x.replace('\n', ''))
         return id
 
-    # def get_MS_SECID(self):
-    #     id_list = self.get_white()
-    #     MS_SECID_LIST = []
-    #     # print(id_list)
-    #     for m in id_list:
-    #         # isin==ms_secid
-    #         # print(f'{m}')
-    #         m = m.split('==')
-    #         ISIN = m[0]
-    #         MS_SECID = m[1]
-    #         MS_SECID_LIST.append(MS_SECID)
-    #     return MS_SECID_LIST
 
     def get_time(self):
         times = time.strftime("%Y%m%d%H%MS", time.localtime())
@@ -337,7 +325,8 @@ class Comparexml:
                         xml_dic_detail = {} # {0: ['HK0000012440', 'IE0008370151', 'First Sentier Asia Strat Bd I USDInc', '6.99291', '2021-06-30']}
                         weight_dic = {}
                         xml_list_detail_2 = []
-
+                        w_list = []
+                        dic_detail = []
                         Weighting = re.findall("<Weighting>(.*?)</Weighting>", hd)
                         if Weighting:
                             print(f"Weighting", Weighting[0])
@@ -374,7 +363,8 @@ class Comparexml:
                             for x in l:
                                 key = tuple(x[:-1])
                                 nw[key] = [i + j for i, j in zip_longest(nw.get(key, []), x[-1:], fillvalue=0)]
-                            print(f"nw:", nw)
+
+                            # print(f"nw:", nw)
 
                             sum_v = []
                             for k, v in nw.items():
@@ -383,42 +373,47 @@ class Comparexml:
                                 k.append(str(v[0]))
                                 sum_v.append(v[0])
 
-                            print(f"weight_list:", weight_list)
-                            print(f"sum_v:",sum_v)
-                            print(f"sum_list:",sum_list)
-                            print(f"l:",l)
+                            # print(f"sum_v:",sum_v)
+                            # print(f"sum_list:",sum_list)
+                            # print(f"l:",l)
                             ll = sum_list
-                            print(f"ll:",ll)
+                            # print(f"ll:",ll)
 
-                            for i, j in enumerate(l):
+                            for i, j in enumerate(ll):
                                 # print(i,j)
                                 xml_dic_detail[i] = j
+
+                            dic_detail.append(xml_dic_detail)
+                            xml_list = dic_detail
+
+                            # print(f"dic_detail", dic_detail)
                             # weight_list = []
                             for ii, jj in enumerate(sum_v):
                                 weight_dic[ii] = jj
-                            weight_list.append(weight_dic)
-                            print(f"weight_list:", weight_list)
-                #             print(f"xml_dic_detail", xml_dic_detail)
-                #             print(f"weight_dic", weight_dic)
-                #
-                #             # weight_list.append(weight_dic)
-                #             # weight_list_detail.append()
-                #             print("================================")
-                #             xml_list.append(xml_dic_detail)
-                #             print(weight_list)
-                #     # weight_list_detail = sorted(weight_list_detail, key=float, reverse=True)
-                #     sum_v = sorted(sum_v, key=float, reverse=True)
-                #     # print(weight_list_detail)
-                #     # weight_num_list = self.get_weight_num(weight_list_detail, weight_list)
-                #     weight_num_list = self.get_weight_num(sum_v, weight_list)
-                #     print(f"排序后的weight坐标: {weight_num_list}")
-                #     # 根据新坐标获取列表
-                #     for wl in weight_num_list[:10]:
-                #         for xxx in xml_list:
-                #             for k, v in xxx.items():
-                #                 if wl == k:
-                #                     new_xml_list.append(v)
-                # print(new_xml_list)
+                            w_list.append(weight_dic)
+                            weight_list = w_list
+                            # print(f"w_list:", w_list)
+                            # print(f"xml_dic_detail", xml_dic_detail)
+                            # print(f"weight_dic", weight_dic)
+                            # print("================================")
+                            # print(f"weight_list:",weight_list)
+                    # weight_list_detail = sorted(weight_list_detail, key=float, reverse=True)
+                    sum_v = sorted(sum_v, key=float, reverse=True)
+                    # print(weight_list_detail)
+                    # weight_num_list = self.get_weight_num(weight_list_detail, weight_list)
+                    weight_num_list = self.get_weight_num(sum_v, weight_list)
+                    print(f"排序后的weight坐标: {weight_num_list}")
+                    # 根据新坐标获取列表
+
+                    for wl in weight_num_list[:10]:
+                        for xxx in xml_list:
+                            for k, v in xxx.items():
+                                if wl == k:
+                                    new_xml_list.append(v)
+                # print(f"new_xml_list:", new_xml_list)
+                for i in new_xml_list:
+                    i = i.sort()
+                print(f"new_xml_list:", new_xml_list)
         return new_xml_list
 
 
@@ -434,7 +429,6 @@ class Comparexml:
                     if wd == v:
                         new_weight_num.append(k)
         return new_weight_num
-
 
     def read_holding_csv(self):
         holding_csv_dic = {}
@@ -1582,7 +1576,7 @@ if __name__ == '__main__':
     # c.compare_manager()
 
     # #获取xml数据
-    c.xml_holding()
+    # c.xml_holding()
     # # aa = c.xml_holding()
     # # print("打印根据weight排名前十个：")
     # # for a in aa:
@@ -1592,7 +1586,7 @@ if __name__ == '__main__':
     # c.read_holding_csv()
 
     # # 校验holding.csv
-    # c.compare_holding()
+    c.compare_holding()
 
 
     # # 获取xml_basicInfo数据
