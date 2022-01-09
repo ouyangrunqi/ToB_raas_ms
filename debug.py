@@ -11,6 +11,7 @@ import os
 from datetime import datetime
 import xlrd
 from decimal import Decimal
+from itertools import zip_longest
 
 starttime = datetime.now()
 print(starttime)
@@ -296,13 +297,10 @@ class Comparexml:
 
 
     def xml_holding(self):
-        # MS_SECID_list = self.get_MS_SECID()
         new_xml_list = []
         id_list = self.get_white()
         for m in id_list:
             xml_list = []
-            # isin==ms_secid
-            # print(f'{m}')
             m = m.split('==')
             ISIN = m[0]
             MS_SECID = m[1]
@@ -330,12 +328,12 @@ class Comparexml:
 
                     weight_list_detail = [] # [6.99291]
                     weight_list = [] # [{0: 6.99291}]
+                    l = []
                     # 遍历序列中的元素及其下标
                     for num, hd in enumerate(holding_detail):
-                        xml_list_detail = [] # ['HK0000012440', 'IE0008370151', 'First Sentier Asia Strat Bd I USDInc', '6.99291', '2021-06-30']
+                        xml_list_detail = []  # ['HK0000012440', 'IE0008370151', 'First Sentier Asia Strat Bd I USDInc', '6.99291', '2021-06-30']
                         xml_dic_detail = {} # {0: ['HK0000012440', 'IE0008370151', 'First Sentier Asia Strat Bd I USDInc', '6.99291', '2021-06-30']}
                         weight_dic = {}
-                        nw = {}
                         Weighting = re.findall("<Weighting>(.*?)</Weighting>", hd)
                         if Weighting:
                             print(f"Weighting", Weighting[0])
@@ -349,7 +347,7 @@ class Comparexml:
                                 xml_list_detail.append(isin_code[0])
                             else:
                                 pass
-                            #     xml_list_detail.append("")
+
                             currency = re.findall('<Currency _Id="(.*?)">',hd)
                             if currency:
                                 print(currency[0])
@@ -361,34 +359,47 @@ class Comparexml:
                                 print(security_name[0])
                                 xml_list_detail.append(security_name[0])
 
-                            xml_list_detail.append(weight_text)
+
                             xml_list_detail.append(holding_detail_date[0])
                             xml_list_detail.sort()
+                            xml_list_detail.append(weight_float)
+                            l.append(xml_list_detail)
 
-                            nw[security_name[0]] = weight_float
-                            for k,v in nw.items():
+                            nw = {}
+                            sum_list = []
+                            for x in l:
+                                key = tuple(x[:-1])
+                                nw[key] = [i + j for i, j in zip_longest(nw.get(key, []), x[-1:], fillvalue=0)]
+                            # print(nw)
 
+                            sum_v = []
+                            for k, v in nw.items():
+                                k = list(k)
+                                sum_list.append(k)
+                                k.append(str(v[0]))
+                                sum_v.append(v[0])
 
-                                print(nw)
+                            print(sum_v)
+                            print(sum_list)
 
-                    #         xml_dic_detail[num] = xml_list_detail # {0: ['HK0000012440', 'IE0008370151', 'First Sentier Asia Strat Bd I USDInc', '6.99291', '2021-06-30']}
-                    #         weight_dic[num] = weight_float # {0: 6.99291}
-                    #
-                    #         weight_list.append(weight_dic)
-                    #         weight_list_detail.append(weight_float)
-                    #         print("================================")
-                    #         xml_list.append(xml_dic_detail)
-                    #
-                    # weight_list_detail = sorted(weight_list_detail, key=float, reverse=True)
-                    # # print(weight_list_detail)
-                    # weight_num_list = self.get_weight_num(weight_list_detail, weight_list)
-                    # print(f"排序后的weight坐标: {weight_num_list}")
-                    # # 根据新坐标获取列表
-                    # for wl in weight_num_list[:10]:
-                    #     for xxx in xml_list:
-                    #         for k, v in xxx.items():
-                    #             if wl == k:
-                    #                 new_xml_list.append(v)
+                #             xml_dic_detail[num] = l # {0: ['HK0000012440', 'IE0008370151', 'First Sentier Asia Strat Bd I USDInc', '6.99291', '2021-06-30']}
+                #             weight_dic[num] = weight_float # {0: 6.99291}
+                #
+                #             weight_list.append(weight_dic)
+                #             weight_list_detail.append(weight_float)
+                #             print("================================")
+                #             xml_list.append(xml_dic_detail)
+                #
+                #     weight_list_detail = sorted(weight_list_detail, key=float, reverse=True)
+                #     # print(weight_list_detail)
+                #     weight_num_list = self.get_weight_num(weight_list_detail, weight_list)
+                #     print(f"排序后的weight坐标: {weight_num_list}")
+                #     # 根据新坐标获取列表
+                #     for wl in weight_num_list[:10]:
+                #         for xxx in xml_list:
+                #             for k, v in xxx.items():
+                #                 if wl == k:
+                #                     new_xml_list.append(v)
                 # print(new_xml_list)
         return new_xml_list
 
