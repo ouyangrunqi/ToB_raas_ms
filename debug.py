@@ -19,7 +19,7 @@ print(starttime)
 class Comparexml:
     def __init__(self):
         # self.url = f"https://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=magnumhk&Id={MS_SECID}&IDTYpe=FundShareClassId&Content=1471&Currencies=BAS"
-        self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36'}
+        self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36'}
         self.managercsv_filepath = r'D:\ms\manager_debug.csv'
         self.holdingcsv_filepath = r'D:\ms\holding_debug.csv'
         self.basciInfo_filepath = r'D:\ms\basicInfo_debug.csv'
@@ -33,7 +33,7 @@ class Comparexml:
         获取白名单 ISIN==MS_SECID
         '''
         id = []
-        with open('IE.txt', 'r', encoding='utf-8')as f:
+        with open('white_debug.txt', 'r', encoding='utf-8')as f:
             for x in f.readlines():
                 id.append(x.replace('\n', ''))
         return id
@@ -319,6 +319,7 @@ class Comparexml:
                     l = []
                     ll = []
                     weight_list = []
+
                     # 遍历序列中的元素及其下标
                     for num, hd in enumerate(holding_detail):
                         xml_list_detail = []  # ['HK0000012440', 'IE0008370151', 'First Sentier Asia Strat Bd I USDInc', '6.99291', '2021-06-30']
@@ -327,12 +328,36 @@ class Comparexml:
                         xml_list_detail_2 = []
                         w_list = []
                         dic_detail = []
-                        Weighting = re.findall("<Weighting>(.*?)</Weighting>", hd)
+
+                        data = requests.get(url=url, headers=self.headers)
+                        selector = etree.XML(data.content)
+
+                        # Weighting = re.findall("<Weighting>(.*?)</Weighting>", hd)
+                        # if Weighting:
+                        #     print(f"Weighting", Weighting[0])
+                        #     weight_text = str((Decimal(Weighting[0]) / 100).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP')).rstrip("0")
+                        #     weight_float = float(weight_text)
+                        #     # 持仓占比
+                        #     xml_list_detail.append(ISIN)
+                        #     isin_code = re.findall("<ISIN>(.*?)</ISIN>", hd)
+                        #     if isin_code:
+                        #         print(isin_code[0])
+                        #         xml_list_detail.append(isin_code[0])
+                        #     else:
+                        #         pass
+                        Weighting = selector.xpath(f'/FundShareClass/Fund/PortfolioList/Portfolio/Holding/HoldingDetail/Weighting')
                         if Weighting:
-                            print(f"Weighting", Weighting[0])
-                            weight_text = str((Decimal(Weighting[0]) / 100).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP')).rstrip("0")
-                            weight_float = float(weight_text)
-                            # 持仓占比
+                            x = list(Weighting)
+                            ww = []
+                            for i in x:
+
+                                xx = i.text
+                                weight_text = str((Decimal(xx) / 100).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP')).rstrip("0")
+                                weight_float = float(weight_text)
+
+                                xml_list_detail.append(weight_text)
+                                # 持仓占比
+
                             xml_list_detail.append(ISIN)
                             isin_code = re.findall("<ISIN>(.*?)</ISIN>", hd)
                             if isin_code:
@@ -341,78 +366,89 @@ class Comparexml:
                             else:
                                 pass
 
-                            currency = re.findall('<Currency _Id="(.*?)">',hd)
-                            if currency:
-                                print(currency[0])
-                                xml_list_detail.append(currency[0])
-                            else:
-                                pass
+                            # currency = re.findall('<Currency _Id="(.*?)">',hd)
+                            # if currency:
+                            #     print(currency[0])
+                            #     xml_list_detail.append(currency[0])
+                            # else:
+                            #     pass
+
+                            # currency = selector.xpath(f'/FundShareClass/Fund/PortfolioList/Portfolio/Holding/HoldingDetail/Currency/@_Id')
+                            # if currency:
+                            #     x = list(currency)
+                            #     print(f"currency", x)
+                            #     xml_list_detail.append(x)
+                            # else:
+                            #     pass
+
                             security_name = re.findall("<SecurityName>(.*?)</SecurityName>", hd)
                             if security_name:
                                 print(security_name[0])
                                 xml_list_detail.append(security_name[0])
 
+                        print(f"xml_list_detail:", xml_list_detail)
 
-                            xml_list_detail.append(holding_detail_date[0])
-                            xml_list_detail.sort()
-                            xml_list_detail.append(weight_float)
-                            l.append(xml_list_detail)
 
-                            nw = {}
-                            sum_list = []
-                            for x in l:
-                                key = tuple(x[:-1])
-                                nw[key] = [i + j for i, j in zip_longest(nw.get(key, []), x[-1:], fillvalue=0)]
-
-                            # print(f"nw:", nw)
-
-                            sum_v = []
-                            for k, v in nw.items():
-                                k = list(k)
-                                sum_list.append(k)
-                                k.append(str(v[0]))
-                                sum_v.append(v[0])
-
-                            # print(f"sum_v:",sum_v)
-                            # print(f"sum_list:",sum_list)
-                            # print(f"l:",l)
-                            ll = sum_list
-                            # print(f"ll:",ll)
-
-                            for i, j in enumerate(ll):
-                                # print(i,j)
-                                xml_dic_detail[i] = j
-
-                            dic_detail.append(xml_dic_detail)
-                            xml_list = dic_detail
-
-                            # print(f"dic_detail", dic_detail)
-                            # weight_list = []
-                            for ii, jj in enumerate(sum_v):
-                                weight_dic[ii] = jj
-                            w_list.append(weight_dic)
-                            weight_list = w_list
-                            # print(f"w_list:", w_list)
-                            # print(f"xml_dic_detail", xml_dic_detail)
-                            # print(f"weight_dic", weight_dic)
-                            # print("================================")
-                            # print(f"weight_list:",weight_list)
-                    # weight_list_detail = sorted(weight_list_detail, key=float, reverse=True)
-                    sum_v = sorted(sum_v, key=float, reverse=True)
-                    # print(weight_list_detail)
-                    # weight_num_list = self.get_weight_num(weight_list_detail, weight_list)
-                    weight_num_list = self.get_weight_num(sum_v, weight_list)
-                    print(f"排序后的weight坐标: {weight_num_list}")
-                    # 根据新坐标获取列表
-
-                    for wl in weight_num_list[:10]:
-                        for xxx in xml_list:
-                            for k, v in xxx.items():
-                                if wl == k:
-                                    new_xml_list.append(v)
-                # print(f"new_xml_list:", new_xml_list)
-                for i in new_xml_list:
-                    i = i.sort()
+                            # xml_list_detail.append(holding_detail_date[0])
+                            # xml_list_detail.sort()
+                            # xml_list_detail.append(weight_float)
+                            # l.append(xml_list_detail)
+                #
+                #             nw = {}
+                #             sum_list = []
+                #             for x in l:
+                #                 key = tuple(x[:-1])
+                #                 nw[key] = [i + j for i, j in zip_longest(nw.get(key, []), x[-1:], fillvalue=0)]
+                #
+                #             # print(f"nw:", nw)
+                #
+                #             sum_v = []
+                #             for k, v in nw.items():
+                #                 k = list(k)
+                #                 sum_list.append(k)
+                #                 k.append(str(v[0]))
+                #                 sum_v.append(v[0])
+                #
+                #             # print(f"sum_v:",sum_v)
+                #             # print(f"sum_list:",sum_list)
+                #             # print(f"l:",l)
+                #             ll = sum_list
+                #             # print(f"ll:",ll)
+                #
+                #             for i, j in enumerate(ll):
+                #                 # print(i,j)
+                #                 xml_dic_detail[i] = j
+                #
+                #             dic_detail.append(xml_dic_detail)
+                #             xml_list = dic_detail
+                #
+                #             # print(f"dic_detail", dic_detail)
+                #             # weight_list = []
+                #             for ii, jj in enumerate(sum_v):
+                #                 weight_dic[ii] = jj
+                #             w_list.append(weight_dic)
+                #             weight_list = w_list
+                #             # print(f"w_list:", w_list)
+                #             # print(f"xml_dic_detail", xml_dic_detail)
+                #             # print(f"weight_dic", weight_dic)
+                #             # print("================================")
+                #             # print(f"weight_list:",weight_list)
+                #     # weight_list_detail = sorted(weight_list_detail, key=float, reverse=True)
+                #     sum_v = sorted(sum_v, key=float, reverse=True)
+                #     # print(weight_list_detail)
+                #     # weight_num_list = self.get_weight_num(weight_list_detail, weight_list)
+                #     weight_num_list = self.get_weight_num(sum_v, weight_list)
+                #     print(f"排序后的weight坐标: {weight_num_list}")
+                #     # 根据新坐标获取列表
+                #
+                #     for wl in weight_num_list[:10]:
+                #         for xxx in xml_list:
+                #             for k, v in xxx.items():
+                #                 if wl == k:
+                #                     new_xml_list.append(v)
+                # # print(f"new_xml_list:", new_xml_list)
+                # for i in new_xml_list:
+                #     i = i.sort()
                 print(f"new_xml_list:", new_xml_list)
         return new_xml_list
 
@@ -432,7 +468,7 @@ class Comparexml:
 
     def read_holding_csv(self):
         holding_csv_dic = {}
-        with open(self.holdingcsv_filepath, 'r', encoding='utf-8') as f:
+        with open(self.holdingcsv_filepath, 'r') as f:
             reader = csv.reader(f)
             i = 0
             for row in reader:

@@ -28,7 +28,7 @@ class Comparexml:
         获取白名单 ISIN==MS_SECID
         '''
         id = []
-        with open('HK.txt', 'r', encoding='utf-8')as f:
+        with open('LU.txt', 'r', encoding='utf-8')as f:
             for x in f.readlines():
                 id.append(x.replace('\n', ''))
         return id
@@ -209,7 +209,8 @@ class Comparexml:
                             fundNameEN = re.findall("<LegalName>(.*)",name)
                             if fundNameEN:
                                 # print(f"fundNameEN:", fundNameEN[0])
-                                xml_list_detail.append(fundNameEN[0])
+                                x = fundNameEN[0]
+                                xml_list_detail.append(x.replace('&amp;', '&'))
 
                         data = requests.get(url=url, headers=self.headers)
                         date2 = requests.get(url=url2, headers=self.headers)
@@ -226,10 +227,12 @@ class Comparexml:
                             f'/FundShareClass/Fund/MultilingualVariation/LanguageVariation[@_LanguageId="0L00000082"]/RegionVariation/Name')
                         if fundNameSC_1:
                             # print(f"fundNameSC:", fundNameSC_1[0].text)
-                            xml_list_detail.append(fundNameSC_1[0].text)
+                            x = fundNameSC_1[0].text
+                            xml_list_detail.append(x.replace(u'\xa0', u'?'))
                         elif fundNameSC_2:
+                            x = fundNameSC_2[0].text
                             # print(f"fundNameSC:", fundNameSC_2[0].text)
-                            xml_list_detail.append(fundNameSC_2[0].text)
+                            xml_list_detail.append(x.replace(u'\xa0', u'?'))
                         else:
                             # print(f"fundNameSC:无数据")
                             xml_list_detail.append("")
@@ -295,7 +298,7 @@ class Comparexml:
                             xml_list_detail.append((sharpeRatioM12[0].text).rstrip("0"))
                         else:
                             # print(f"sharpeRatioM12: 数据缺失")
-                            xml_list_detail.append("sharpeRatioM12: N/A")
+                            xml_list_detail.append("")
 
                         # 三年夏普比例
                         sharpeRatioM36 = selector.xpath(f"/FundShareClass/ClassPerformance/Performance/TrailingPerformance[@Type='1000']/RiskAndRating/RiskAnalysis/RiskMeasures/RiskMeasuresDetail[@TimePeriod='M36' and @Type='61']/SharpeRatio")
@@ -314,7 +317,7 @@ class Comparexml:
                             xml_list_detail.append(str(round(float(maxDrawdownM12[0].text)/100, 4)))
                         else:
                             # print(f"maxDrawdownM12: 数据缺失")
-                            xml_list_detail.append("maxDrawdownM12: N/A")
+                            xml_list_detail.append("")
 
                         # 最大三年回撤
                         maxDrawdownM36 = selector.xpath(
@@ -334,7 +337,7 @@ class Comparexml:
                             xml_list_detail.append(str(round(float(standardDeviationM12[0].text)/100, 4)))
                         else:
                             # print(f"standardDeviationM12: 数据缺失")
-                            xml_list_detail.append("standardDeviationM12: N/A")
+                            xml_list_detail.append("")
 
                         # 三年波幅
                         standardDeviationM36 = selector.xpath(
@@ -410,7 +413,7 @@ class Comparexml:
                             xml_list_detail.append(fundSetupDate[0].text)
 
                         # 起投金额
-                        minInitialInvestment = selector.xpath('//PurchaseDetail//InitialInvestment')
+                        minInitialInvestment = selector.xpath(f'//PurchaseDetail [@_CurrencyId="{baseCurrency[0]}"]//InitialInvestment')
                         if minInitialInvestment:
                             # print(f"minInitialInvestment:", minInitialInvestment[0].text)
                             xml_list_detail.append(minInitialInvestment[0].text)
@@ -419,7 +422,7 @@ class Comparexml:
                             xml_list_detail.append("")
 
                         # 最小追加金额
-                        minSubsequentInvestment = selector.xpath('//SubsequentInvestment [@_Unit="1"]')
+                        minSubsequentInvestment = selector.xpath(f'//PurchaseDetail [@_CurrencyId="{baseCurrency[0]}"]//SubsequentInvestment [@_Unit="1"]')
                         if minSubsequentInvestment:
                             # print(f"minSubsequentInvestment:", minSubsequentInvestment[0].text)
                             xml_list_detail.append(minSubsequentInvestment[0].text)
@@ -455,8 +458,9 @@ class Comparexml:
                         # 基金投资策略简述-EN
                         fundInvestStrategyEN = selector.xpath('//FundNarratives[@_LanguageId="0L00000122"]//InvestmentStrategy')
                         if fundInvestStrategyEN:
+                            x = fundInvestStrategyEN[0].text
                             # print(f"fundInvestStrategyEN:", fundInvestStrategyEN[0].text)
-                            xml_list_detail.append(fundInvestStrategyEN[0].text)
+                            xml_list_detail.append(x.replace('\n', ' '))
                         else:
                             # print(f"fundInvestStrategyEN: 无数据")
                             xml_list_detail.append("")
