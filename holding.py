@@ -119,13 +119,13 @@ class Comparexml:
                                 xml_list_detail.append(isin_code[0])
                             else:
                                 pass
-                            #     xml_list_detail.append("")
-                            currency = re.findall('<Currency _Id="(.*?)">',hd)
-                            if currency:
-                                # print(currency[0])
-                                xml_list_detail.append(currency[0])
-                            else:
-                                pass
+
+                            # currency = re.findall('<Currency _Id="(.*?)">',hd)
+                            # if currency:
+                            #     # print(currency[0])
+                            #     xml_list_detail.append(currency[0])
+                            # else:
+                            #     pass
                             security_name = re.findall("<SecurityName>(.*?)</SecurityName>", hd)
                             if security_name:
                                 xml_list_detail.append(security_name[0])
@@ -172,7 +172,7 @@ class Comparexml:
                 # print(f"new_xml_list:", new_xml_list)
                 for i in new_xml_list:
                     i = i.sort()
-                print(new_xml_list)
+                print(f"new_xml_list:", new_xml_list)
         return new_xml_list
 
 
@@ -199,15 +199,15 @@ class Comparexml:
                 if i == 0:
                     pass
                 else:
-                    row = row[0:6]
-                    report_date = row[5]  # 读取csv中的日期
+                    row = row[0:2] + row[3:]
+                    report_date = row[4]  # 读取csv中的日期
                     if "/" in report_date:
                         csv_reportDate = report_date.split("/")  # csv中，年月日，根据"/"切割
                         report_date = self.date_conversion(csv_reportDate)  # 把切割后的列表传进日期转换的方法date_conversion()
                     if "-" in report_date: # 同理，月份1~9加0，日期1~9加0
                         csv_reportDate = report_date.split("-")
                         report_date = self.date_conversion(csv_reportDate)
-                    row[5] = report_date
+                    row[4] = report_date
                     row.sort()
                     while "" in row:
                         row.remove("")
