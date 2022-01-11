@@ -18,8 +18,8 @@ print(starttime)
 class Comparexml:
     def __init__(self):
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36'}
-        self.distribution_filepath = r'D:\ms\distribution_debug.csv'
-        self.white_filepath = r'D:\ms\white_v6.xlsx'
+        self.distribution_filepath = r'D:\ms\csv\distribution_debug.csv'
+        self.white_filepath = r'D:\ms\white\white_v6.xlsx'
 
 
     def get_white(self):
@@ -27,7 +27,7 @@ class Comparexml:
         获取白名单 ISIN==MS_SECID
         '''
         id = []
-        with open('LU.txt', 'r', encoding='utf-8')as f:
+        with open('D:\ms\white\LU.txt', 'r', encoding='utf-8')as f:
             for x in f.readlines():
                 id.append(x.replace('\n', ''))
         return id

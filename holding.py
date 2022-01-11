@@ -18,7 +18,7 @@ starttime = datetime.now()
 class Comparexml:
     def __init__(self):
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36'}
-        self.holdingcsv_filepath = r'D:\ms\holding_debug.csv'
+        self.holdingcsv_filepath = r'D:\ms\csv\holding_debug.csv'
 
 
     def get_white(self):
@@ -26,7 +26,7 @@ class Comparexml:
         获取白名单 ISIN==MS_SECID
         '''
         id = []
-        with open('IE.txt', 'r', encoding='utf-8')as f:
+        with open('D:\ms\white\IE.txt', 'r', encoding='utf-8')as f:
             for x in f.readlines():
                 id.append(x.replace('\n', ''))
         return id
@@ -113,6 +113,7 @@ class Comparexml:
                             weight_float = float(weight_text)
                             # 持仓占比
                             xml_list_detail.append(ISIN)
+
                             isin_code = re.findall("<ISIN>(.*?)</ISIN>", hd)
                             if isin_code:
                                 # print(isin_code[0])
@@ -128,7 +129,8 @@ class Comparexml:
                             #     pass
                             security_name = re.findall("<SecurityName>(.*?)</SecurityName>", hd)
                             if security_name:
-                                xml_list_detail.append(security_name[0])
+                                x = security_name[0]
+                                xml_list_detail.append(x.replace('&amp;', '&'))
 
                             xml_list_detail.append(holding_detail_date[0])
                             xml_list_detail.sort()
@@ -145,8 +147,11 @@ class Comparexml:
                             for k, v in nw.items():
                                 k = list(k)
                                 sum_list.append(k)
-                                k.append(str(v[0]))
-                                sum_v.append(v[0])
+                                vv = str((Decimal(v[0])).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP')).rstrip("0")
+                                vvv = ((Decimal(v[0])).quantize(Decimal('0.000000'), rounding='ROUND_HALF_UP'))
+                                k.append(vv)
+                                sum_v.append(vvv)
+
 
                             ll = sum_list
 
