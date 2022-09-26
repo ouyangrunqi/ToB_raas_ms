@@ -16,7 +16,7 @@ starttime = datetime.now()
 class Comparexml:
     def __init__(self):
         self.headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.54 Safari/537.36'}
-        self.managercsv_filepath = r'D:\ms\csv\manager_1641546453436.csv'
+        self.managercsv_filepath = r'D:\ToB_raas_ms\csv\manager_1641546453436.csv'
 
 
     def get_white(self):
@@ -24,7 +24,7 @@ class Comparexml:
         获取白名单 ISIN==MS_SECID
         '''
         id = []
-        with open('D:\ms\white\white_all_213.txt', 'r', encoding='utf-8')as f:
+        with open('D:\ToB_raas_ms\white\white_all_213.txt', 'r', encoding='utf-8')as f:
             for x in f.readlines():
                 id.append(x.replace('\n', ''))
         return id
